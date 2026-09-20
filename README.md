@@ -5,7 +5,6 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Phase-15%20Complete-6D28D9?style=for-the-badge" alt="Phase 15 Complete" />
   <img src="https://img.shields.io/badge/Python-3.10.11-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10.11" />
   <img src="https://img.shields.io/badge/React-18.3.1-61DAFB?style=for-the-badge&logo=react&logoColor=111827" alt="React 18.3.1" />
   <img src="https://img.shields.io/badge/FastAPI-Backend-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
@@ -660,8 +659,6 @@ uvicorn main:app --host 127.0.0.1 --port 8000
 
 ## 📊 Project Status
 
-**DocMindAI Phase 15 — Completed**
-
 The completed system includes:
 
 - ✅ Full-stack React + FastAPI application
@@ -701,16 +698,6 @@ DocMindAI demonstrates practical AI engineering skills across:
 - Evidence grounding and citations
 
 It is designed as a portfolio project for **AI Engineer / AI-ML Engineer / Generative AI Engineer** roles.
-
----
-
-## 📜 Version
-
-```text
-DocMindAI: Phase 15 Complete
-Frontend package version: 2.0.0
-```
-
 ---
 
 <p align="center">
