@@ -701,16 +701,6 @@ DocMindAI demonstrates practical AI engineering skills across:
 - Evidence grounding and citations
 
 It is designed as a portfolio project for **AI Engineer / AI-ML Engineer / Generative AI Engineer** roles.
-
----
-
-## 📜 Version
-
-```text
-DocMindAI: Phase 15 Complete
-Frontend package version: 2.0.0
-```
-
 ---
 
 <p align="center">
