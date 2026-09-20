@@ -1,0 +1,12 @@
+# Additive Phase 15 runtime manifest.
+# The frozen Phase 1-14 requirements.txt is intentionally unchanged.
+-r requirements.txt
+
+# Runtime packages imported by the frozen Agentic RAG implementation.
+langgraph>=0.2,<1.0
+chromadb>=0.5,<2.0
+ollama>=0.4,<1.0
+
+# Runtime dependencies used by the frozen authentication schemas/password stack.
+email-validator>=2,<3
+bcrypt>=4,<5

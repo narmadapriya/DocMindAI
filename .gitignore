@@ -1,0 +1,92 @@
+# ============================================================
+# DocMindAI
+# ============================================================
+
+# ----------------------------
+# Python
+# ----------------------------
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ----------------------------
+# Environment / secrets
+# ----------------------------
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+*.env
+
+# Keep environment templates
+!.env.example
+!**/.env.example
+!.password_reset.env.example
+!**/.password_reset.env.example
+
+# ----------------------------
+# Backend runtime data
+# ----------------------------
+backend/uploads/
+backend/chroma_db/
+backend/app/chroma_db/
+chroma_db/
+
+*.sqlite
+*.sqlite3
+*.db
+
+# ----------------------------
+# Frontend dependencies/build
+# ----------------------------
+frontend/node_modules/
+frontend/dist/
+node_modules/
+dist/
+
+# ----------------------------
+# Test/cache output
+# ----------------------------
+coverage/
+htmlcov/
+.coverage
+.cache/
+
+# ----------------------------
+# Logs
+# ----------------------------
+*.log
+logs/
+
+# ----------------------------
+# Archives / frozen backups
+# ----------------------------
+*.zip
+*.rar
+*.7z
+
+# ----------------------------
+# IDE / OS files
+# ----------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ----------------------------
+# Temporary files
+# ----------------------------
+*.tmp
+*.temp
+*.bak
+*.swp
+~$*

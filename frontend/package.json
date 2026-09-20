@@ -1,0 +1,40 @@
+{
+  "name": "docmindai-frontend",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "axios": "^1.19.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-dropzone": "^14.4.1",
+    "react-markdown": "^9.1.0",
+    "react-router-dom": "^6.30.6",
+    "recharts": "^2.15.4",
+    "remark-gfm": "^4.0.1",
+    "tailwind-merge": "^2.6.1",
+    "zustand": "^5.0.15",
+    "jspdf": "^3.0.2"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.5",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.5.4",
+    "jsdom": "^25.0.1",
+    "postcss": "^8.5.26",
+    "tailwindcss": "^3.4.19",
+    "vite": "^6.4.3",
+    "vitest": "^2.1.9"
+  }
+}

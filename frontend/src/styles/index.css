@@ -1,0 +1,2387 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #020617;
+  color: #e8eefc;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; margin: 0; }
+body {
+  min-width: 320px;
+  background:
+    radial-gradient(circle at 35% 0%, rgba(124,58,237,.05), transparent 28rem),
+    #020617;
+}
+button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
+::selection { background: rgba(139,92,246,.45); color: white; }
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: #060b1d; }
+::-webkit-scrollbar-thumb { background: #23304b; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #33415f; }
+
+@layer components {
+  .panel {
+    @apply rounded-xl border border-slate-800/90 bg-ink-900/80 shadow-panel;
+  }
+  .field {
+    @apply w-full rounded-lg border border-slate-700 bg-ink-800 px-3 py-2.5 text-sm text-slate-100 outline-none transition placeholder:text-slate-600 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20;
+  }
+  .label {
+    @apply mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.08em] text-sky-300/90;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-ink-800 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-800/80 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .muted { @apply text-slate-400; }
+}
+
+
+/* ---------- Functional light theme ---------- */
+html.light {
+  color-scheme: light;
+  background: #f5f7fb;
+  color: #0f172a;
+}
+
+html.light body {
+  background:
+    radial-gradient(circle at 35% 0%, rgba(124,58,237,.07), transparent 28rem),
+    #f5f7fb;
+  color: #0f172a;
+}
+
+html.light .app-shell,
+html.light .auth-page {
+  background: #f5f7fb !important;
+  color: #0f172a !important;
+}
+
+html.light .desktop-sidebar,
+html.light header,
+html.light main,
+html.light aside {
+  background-color: #ffffff !important;
+}
+
+html.light .panel,
+html.light .bg-ink-900,
+html.light .bg-ink-900\/80,
+html.light .bg-\[\#03091a\],
+html.light .bg-\[\#020718\] {
+  background-color: #ffffff !important;
+  border-color: #dbe3ef !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .06);
+}
+
+html.light .bg-ink-800,
+html.light .bg-\[\#081126\],
+html.light .bg-slate-900\/60,
+html.light .bg-slate-800\/70 {
+  background-color: #f7f9fc !important;
+}
+
+html.light .border-slate-800,
+html.light .border-slate-800\/90,
+html.light .border-slate-700 {
+  border-color: #dbe3ef !important;
+}
+
+html.light .text-white,
+html.light .text-slate-100,
+html.light .text-slate-200,
+html.light .text-slate-300 {
+  color: #172033 !important;
+}
+
+html.light .text-slate-400 {
+  color: #52627a !important;
+}
+
+html.light .text-slate-500,
+html.light .text-slate-600 {
+  color: #718096 !important;
+}
+
+html.light .field {
+  background: #ffffff !important;
+  color: #172033 !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light .field::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.light .auth-card {
+  background: #ffffff !important;
+}
+
+html.light .prose,
+html.light .prose * {
+  color: #24324a;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #eef2f7;
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: #c3cede;
+}
+
+
+/* =========================================================
+   DocMind AI unified theme — reference-matched Light / Dark
+   ========================================================= */
+:root,
+html.dark {
+  --dm-bg: #020817;
+  --dm-bg-soft: #061022;
+  --dm-sidebar: #051022;
+  --dm-header: rgba(2, 8, 23, .96);
+  --dm-panel: rgba(6, 16, 34, .88);
+  --dm-panel-solid: #081326;
+  --dm-panel-soft: #0c1830;
+  --dm-border: #1c2a42;
+  --dm-border-strong: #293853;
+  --dm-text: #f8fafc;
+  --dm-text-soft: #d8e0ec;
+  --dm-muted: #94a3b8;
+  --dm-subtle: #64748b;
+  --dm-input: #0d1a32;
+  --dm-input-text: #eef4ff;
+  --dm-tooltip-bg: #0a1428;
+  --dm-nav-active-a: #4c1d95;
+  --dm-nav-active-b: #6d28d9;
+  --dm-nav-active-text: #f5f3ff;
+  --dm-shadow: 0 14px 42px rgba(0, 0, 0, .22);
+  --dm-chart-grid: #26344e;
+}
+
+html.light {
+  --dm-bg: #fbfcff;
+  --dm-bg-soft: #f7f9fd;
+  --dm-sidebar: #ffffff;
+  --dm-header: rgba(255, 255, 255, .96);
+  --dm-panel: #ffffff;
+  --dm-panel-solid: #ffffff;
+  --dm-panel-soft: #f8faff;
+  --dm-border: #e0e7f0;
+  --dm-border-strong: #ced8e5;
+  --dm-text: #111827;
+  --dm-text-soft: #263249;
+  --dm-muted: #64748b;
+  --dm-subtle: #8390a5;
+  --dm-input: #ffffff;
+  --dm-input-text: #111827;
+  --dm-tooltip-bg: #ffffff;
+  --dm-nav-active-a: #6d28d9;
+  --dm-nav-active-b: #9333ea;
+  --dm-nav-active-text: #ffffff;
+  --dm-shadow: 0 10px 30px rgba(30, 41, 59, .06);
+  --dm-chart-grid: #dbe3ef;
+}
+
+html,
+body,
+#root {
+  background: var(--dm-bg);
+  color: var(--dm-text);
+}
+
+body {
+  transition:
+    background-color .2s ease,
+    color .2s ease;
+}
+
+.app-shell,
+.auth-page {
+  background: var(--dm-bg) !important;
+  color: var(--dm-text) !important;
+}
+
+.desktop-sidebar {
+  background: var(--dm-sidebar) !important;
+  border-color: var(--dm-border) !important;
+  box-shadow: 8px 0 28px rgba(15, 23, 42, .025);
+}
+
+.desktop-content {
+  background: var(--dm-bg) !important;
+}
+
+.desktop-content > header {
+  background: var(--dm-header) !important;
+  border-color: var(--dm-border) !important;
+  backdrop-filter: blur(14px);
+}
+
+.desktop-content > main {
+  background: var(--dm-bg) !important;
+}
+
+.panel {
+  background: var(--dm-panel) !important;
+  border-color: var(--dm-border) !important;
+  box-shadow: var(--dm-shadow) !important;
+}
+
+.field {
+  background: var(--dm-input) !important;
+  border-color: var(--dm-border-strong) !important;
+  color: var(--dm-input-text) !important;
+}
+
+.field::placeholder {
+  color: var(--dm-subtle) !important;
+}
+
+.field:focus {
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, .16) !important;
+}
+
+.theme-dropdown,
+.theme-dropdown-option {
+  background: var(--dm-panel-solid) !important;
+  border-color: var(--dm-border) !important;
+}
+
+html.light .theme-dropdown-option:hover {
+  background: #f3f0ff !important;
+  border-color: #c4b5fd !important;
+}
+
+html.light .theme-segment:not(.bg-violet-950\/40) {
+  background: #f8fafc !important;
+}
+
+.desktop-sidebar a {
+  transition:
+    background-color .16s ease,
+    color .16s ease,
+    border-color .16s ease;
+}
+
+.desktop-sidebar a[aria-current="page"] {
+  background: linear-gradient(
+    100deg,
+    var(--dm-nav-active-a),
+    var(--dm-nav-active-b)
+  ) !important;
+  color: var(--dm-nav-active-text) !important;
+  border-color: rgba(139, 92, 246, .55) !important;
+  box-shadow: 0 9px 22px rgba(109, 40, 217, .14);
+}
+
+html.light .desktop-sidebar a:not([aria-current="page"]) {
+  color: #334155 !important;
+}
+
+html.light .desktop-sidebar a:not([aria-current="page"]):hover {
+  background: #f5f3ff !important;
+  color: #4c1d95 !important;
+}
+
+html.light .desktop-sidebar .bg-ink-900,
+html.light .desktop-sidebar .bg-slate-800 {
+  background: #f8fafc !important;
+}
+
+html.light .text-white,
+html.light .text-slate-100,
+html.light .text-slate-200,
+html.light .text-slate-300 {
+  color: var(--dm-text) !important;
+}
+
+html.light .text-slate-400 {
+  color: #526179 !important;
+}
+
+html.light .text-slate-500,
+html.light .text-slate-600,
+html.light .text-slate-700 {
+  color: var(--dm-muted) !important;
+}
+
+html.light .bg-ink-950,
+html.light .bg-\[\#020617\],
+html.light .bg-\[\#020718\] {
+  background: var(--dm-bg) !important;
+}
+
+html.light .bg-ink-900,
+html.light .bg-ink-900\/30,
+html.light .bg-ink-900\/40,
+html.light .bg-ink-900\/80,
+html.light .bg-\[\#03091a\],
+html.light .bg-\[\#050b1c\],
+html.light .bg-\[\#081126\],
+html.light .bg-\[\#0a1429\] {
+  background: var(--dm-panel-solid) !important;
+}
+
+html.light .bg-ink-800,
+html.light .bg-slate-900,
+html.light .bg-slate-900\/40,
+html.light .bg-slate-900\/60,
+html.light .bg-slate-800\/70,
+html.light .bg-slate-800\/80 {
+  background: var(--dm-panel-soft) !important;
+}
+
+html.light .border-slate-900,
+html.light .border-slate-800,
+html.light .border-slate-800\/90,
+html.light .border-slate-700,
+html.light .divide-slate-800 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--dm-border) !important;
+}
+
+html.light .btn-secondary {
+  background: #ffffff !important;
+  border-color: var(--dm-border-strong) !important;
+  color: #1f2937 !important;
+}
+
+html.light .btn-secondary:hover {
+  background: #f8fafc !important;
+}
+
+html.light .btn-primary {
+  color: #ffffff !important;
+  box-shadow: 0 7px 20px rgba(124, 58, 237, .18) !important;
+}
+
+html.light .auth-card {
+  background: #ffffff !important;
+}
+
+html.light .password-toggle {
+  color: #64748b;
+}
+
+html.light .password-toggle:hover {
+  color: #4c1d95;
+  background: #f5f3ff;
+}
+
+html.light .prose,
+html.light .prose p,
+html.light .prose li,
+html.light .prose td,
+html.light .prose th,
+html.light .prose strong,
+html.light .prose code {
+  color: #24324a !important;
+}
+
+html.light table thead {
+  background: #f1f5f9 !important;
+}
+
+html.light table tbody tr {
+  background: #ffffff !important;
+}
+
+html.light table tbody tr:hover {
+  background: #f8fafc !important;
+}
+
+html.light .bg-violet-950\/15,
+html.light .bg-violet-950\/20,
+html.light .bg-violet-950\/25,
+html.light .bg-violet-950\/30,
+html.light .bg-violet-950\/35,
+html.light .bg-violet-950\/40,
+html.light .bg-violet-950\/45,
+html.light .bg-violet-950\/50 {
+  background: #f4efff !important;
+}
+
+html.light .text-violet-200,
+html.light .text-violet-300 {
+  color: #6d28d9 !important;
+}
+
+html.light .desktop-sidebar a[aria-current="page"] .text-violet-200,
+html.light .desktop-sidebar a[aria-current="page"] .text-violet-300,
+html.light .desktop-sidebar a[aria-current="page"] {
+  color: #ffffff !important;
+}
+
+html.light .bg-emerald-950\/15,
+html.light .bg-emerald-950\/20,
+html.light .bg-emerald-950\/30,
+html.light .bg-emerald-950\/35,
+html.light .bg-emerald-950\/40,
+html.light .bg-emerald-950\/50 {
+  background: #ecfdf5 !important;
+}
+
+html.light .text-emerald-300,
+html.light .text-emerald-400 {
+  color: #059669 !important;
+}
+
+html.light .bg-rose-950\/20,
+html.light .bg-rose-950\/30,
+html.light .bg-rose-950\/40 {
+  background: #fff1f2 !important;
+}
+
+html.light .text-rose-300,
+html.light .text-rose-400 {
+  color: #e11d48 !important;
+}
+
+html.light .bg-amber-950\/20,
+html.light .bg-amber-950\/30,
+html.light .bg-amber-950\/40,
+html.light .bg-amber-950\/50 {
+  background: #fffbeb !important;
+}
+
+html.light .text-amber-300,
+html.light .text-amber-400 {
+  color: #d97706 !important;
+}
+
+html.light .shadow-panel,
+html.light .shadow-2xl {
+  box-shadow: var(--dm-shadow) !important;
+}
+
+/* Keep SVG/chart typography readable in both themes. */
+.recharts-cartesian-axis-tick-value {
+  fill: var(--dm-muted);
+}
+
+.recharts-default-tooltip {
+  background: var(--dm-tooltip-bg) !important;
+  border-color: var(--dm-border) !important;
+  color: var(--dm-text) !important;
+}
+
+/* Scrollbars */
+html.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: #061020;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #283650;
+}
+
+/* =========================================================
+   Reference light theme refinement — Chat & Ask / App Shell
+   Matches the supplied off-white, white-card, purple-accent UI.
+   Dark mode remains untouched.
+   ========================================================= */
+html.light {
+  --dm-bg: #f6f5f7;
+  --dm-bg-soft: #f8f8fa;
+  --dm-sidebar: #fbfbfd;
+  --dm-header: rgba(255, 255, 255, .97);
+  --dm-panel: #ffffff;
+  --dm-panel-solid: #ffffff;
+  --dm-panel-soft: #f7f7f9;
+  --dm-border: #e5e5ea;
+  --dm-border-strong: #d7d8e0;
+  --dm-text: #242633;
+  --dm-text-soft: #3d4156;
+  --dm-muted: #5b5d6a;
+  --dm-subtle: #737688;
+  --dm-input: #fafafb;
+  --dm-input-text: #242633;
+  --dm-tooltip-bg: #ffffff;
+  --dm-nav-active-a: #f2ecff;
+  --dm-nav-active-b: #eee7fb;
+  --dm-nav-active-text: #5a20d9;
+  --dm-shadow: 0 1px 2px rgba(24, 24, 36, .03), 0 7px 24px rgba(24, 24, 36, .035);
+  --dm-chart-grid: #e6e6eb;
+}
+
+html.light body {
+  background: #f6f5f7 !important;
+}
+
+html.light .app-shell,
+html.light .desktop-content,
+html.light .desktop-content > main,
+html.light .chat-page {
+  background: #f6f5f7 !important;
+  color: #242633 !important;
+}
+
+/* Sidebar: soft near-white, dark readable icons/text, pale-purple active item. */
+html.light .desktop-sidebar {
+  background: #fbfbfd !important;
+  border-color: #e6e6eb !important;
+  box-shadow: 6px 0 20px rgba(36, 38, 51, .025) !important;
+}
+
+html.light .desktop-sidebar > div:first-child,
+html.light .desktop-sidebar > div:last-child {
+  border-color: #e6e6eb !important;
+}
+
+html.light .desktop-sidebar a {
+  position: relative;
+  border-color: transparent !important;
+  color: #4f5260 !important;
+}
+
+html.light .desktop-sidebar a svg {
+  color: #686b78;
+}
+
+html.light .desktop-sidebar a:not([aria-current="page"]):hover {
+  background: #f3f1f8 !important;
+  color: #4b22a8 !important;
+}
+
+html.light .desktop-sidebar a:not([aria-current="page"]):hover svg {
+  color: #6d28d9 !important;
+}
+
+html.light .desktop-sidebar a[aria-current="page"] {
+  background: #f1ebfb !important;
+  color: #5a20d9 !important;
+  border-color: transparent !important;
+  box-shadow: inset 3px 0 0 #7c3aed !important;
+}
+
+html.light .desktop-sidebar a[aria-current="page"] svg,
+html.light .desktop-sidebar a[aria-current="page"] .text-violet-200,
+html.light .desktop-sidebar a[aria-current="page"] .text-violet-300 {
+  color: #6d28d9 !important;
+}
+
+html.light .desktop-sidebar .bg-ink-900,
+html.light .desktop-sidebar .bg-slate-800 {
+  background: #ffffff !important;
+  border-color: #e4e4e9 !important;
+}
+
+/* Header/top controls: white surface, subtle borders, purple interaction cue. */
+html.light .desktop-content > header {
+  background: rgba(255, 255, 255, .97) !important;
+  border-color: #e5e5ea !important;
+  box-shadow: 0 1px 0 rgba(36, 38, 51, .02);
+}
+
+html.light .desktop-content > header button,
+html.light .desktop-content > header .border-slate-800 {
+  border-color: #e1e2e8 !important;
+}
+
+html.light .desktop-content > header button:not(.rounded-full) {
+  background: #ffffff !important;
+  color: #5a20d9 !important;
+}
+
+/* General light surfaces/cards. */
+html.light .panel,
+html.light .bg-ink-900,
+html.light .bg-ink-900\/30,
+html.light .bg-ink-900\/40,
+html.light .bg-ink-900\/80,
+html.light .bg-\[\#03091a\],
+html.light .bg-\[\#050b1c\],
+html.light .bg-\[\#081126\],
+html.light .bg-\[\#0a1429\] {
+  background: #ffffff !important;
+  border-color: #e5e5ea !important;
+}
+
+html.light .bg-ink-800,
+html.light .bg-slate-900,
+html.light .bg-slate-900\/40,
+html.light .bg-slate-900\/60,
+html.light .bg-slate-800\/70,
+html.light .bg-slate-800\/80 {
+  background: #f8f8fa !important;
+}
+
+html.light .border-slate-900,
+html.light .border-slate-800,
+html.light .border-slate-800\/90,
+html.light .border-slate-700,
+html.light .divide-slate-800 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e5e5ea !important;
+}
+
+html.light .text-white,
+html.light .text-slate-100,
+html.light .text-slate-200,
+html.light .text-slate-300 {
+  color: #242633 !important;
+}
+
+html.light .text-slate-400 {
+  color: #5b5d6a !important;
+}
+
+html.light .text-slate-500,
+html.light .text-slate-600,
+html.light .text-slate-700 {
+  color: #737688 !important;
+}
+
+/* Chat thread: preserve the current structure, restyle only the light theme. */
+html.light .chat-page > section {
+  background: #f7f7f9 !important;
+}
+
+html.light .chat-page > section > div:first-child {
+  background: #ffffff !important;
+  border-color: #e6e6eb !important;
+}
+
+html.light .chat-page > section > div:first-child .text-cyan-300 {
+  color: #6d28d9 !important;
+}
+
+html.light .chat-page .btn-secondary {
+  background: #ffffff !important;
+  border-color: #e0e1e7 !important;
+  color: #5a20d9 !important;
+  box-shadow: 0 1px 2px rgba(36, 38, 51, .03) !important;
+}
+
+html.light .chat-page .btn-secondary:hover {
+  background: #f8f5ff !important;
+  border-color: #c8b7ef !important;
+}
+
+html.light .chat-page .text-cyan-300,
+html.light .chat-page .text-cyan-400 {
+  color: #6d28d9 !important;
+}
+
+html.light .chat-page .border-violet-800,
+html.light .chat-page .border-violet-800\/70,
+html.light .chat-page .border-violet-700,
+html.light .chat-page .border-violet-700\/60 {
+  border-color: #c8b7ef !important;
+}
+
+html.light .chat-page .bg-violet-950\/20,
+html.light .chat-page .bg-violet-950\/25,
+html.light .chat-page .bg-violet-950\/30,
+html.light .chat-page .bg-violet-950\/40 {
+  background: #f5f0fd !important;
+}
+
+html.light .chat-page .text-violet-200,
+html.light .chat-page .text-violet-300,
+html.light .chat-page .text-violet-400 {
+  color: #6d28d9 !important;
+}
+
+html.light .chat-page .rounded-xl.border.border-violet-800.bg-violet-950\/40 {
+  background: #fbf9ff !important;
+  border-style: dashed !important;
+  border-color: #bca7ed !important;
+  box-shadow: none !important;
+}
+
+/* Message cards and role icons. */
+html.light .chat-page .rounded-xl.border.border-slate-800.bg-ink-900 {
+  background: #ffffff !important;
+  border-color: #e5e5ea !important;
+  box-shadow: 0 1px 3px rgba(36, 38, 51, .025) !important;
+}
+
+html.light .chat-page .border-blue-500\/30 {
+  border-color: #bfd0fa !important;
+}
+
+html.light .chat-page .bg-blue-500\/10 {
+  background: #eff5ff !important;
+}
+
+html.light .chat-page .text-blue-400 {
+  color: #2563eb !important;
+}
+
+html.light .chat-page .border-violet-500\/30 {
+  border-color: #d2c3f3 !important;
+}
+
+html.light .chat-page .bg-violet-500\/10 {
+  background: #f5f0ff !important;
+}
+
+/* Composer/input zone. */
+html.light .chat-page > section > div.border-t {
+  background: #ffffff !important;
+  border-color: #e5e5ea !important;
+}
+
+html.light .chat-page .field {
+  background: #fafafb !important;
+  border-color: #dedfe5 !important;
+  color: #242633 !important;
+  box-shadow: inset 0 1px 1px rgba(36, 38, 51, .015) !important;
+}
+
+html.light .chat-page .field::placeholder {
+  color: #8a8d99 !important;
+}
+
+html.light .chat-page textarea[disabled] {
+  opacity: 1 !important;
+  background: #f7f7f9 !important;
+  color: #8d909c !important;
+}
+
+html.light .chat-page textarea[disabled]::placeholder {
+  color: #8d909c !important;
+}
+
+html.light .chat-page button[aria-label="Send disabled until a document is selected"],
+html.light .chat-page form .btn-primary {
+  background: #24293a !important;
+  color: #ffffff !important;
+  border: 1px solid #343a4d !important;
+  box-shadow: 0 2px 7px rgba(36, 41, 58, .18) !important;
+}
+
+html.light .chat-page button[aria-label="Send disabled until a document is selected"]:disabled {
+  opacity: 1 !important;
+}
+
+/* Empty-state warning: pale warm card like the reference. */
+html.light .chat-page .border-amber-900\/70 {
+  border-color: #efc878 !important;
+}
+
+html.light .chat-page .bg-amber-950\/20 {
+  background: #fff8e9 !important;
+}
+
+html.light .chat-page .text-amber-300 {
+  color: #946000 !important;
+}
+
+/* RAG Sources Panel: white panel, clean file cards, restrained selection. */
+html.light .chat-source-drawer {
+  background: #ffffff !important;
+  border-color: #e5e5ea !important;
+}
+
+html.light .chat-source-drawer > div:first-child {
+  background: #ffffff !important;
+  border-color: #e5e5ea !important;
+}
+
+html.light .chat-source-drawer .field {
+  background: #fafafb !important;
+  border-color: #dedfe5 !important;
+}
+
+html.light .chat-source-drawer button {
+  background: #ffffff !important;
+  border-color: #e3e4e9 !important;
+  box-shadow: 0 1px 2px rgba(36, 38, 51, .025) !important;
+}
+
+html.light .chat-source-drawer button:hover {
+  background: #faf9fd !important;
+  border-color: #cfc4e9 !important;
+}
+
+html.light .chat-source-drawer button.border-violet-700 {
+  background: #faf7ff !important;
+  border-color: #bda9ed !important;
+}
+
+html.light .chat-source-drawer .border-emerald-900 {
+  border-color: #ccebd8 !important;
+}
+
+html.light .chat-source-drawer .bg-emerald-950\/30 {
+  background: #effaf3 !important;
+}
+
+html.light .chat-source-drawer .text-emerald-400 {
+  color: #2e9c58 !important;
+}
+
+html.light .chat-source-drawer .border-slate-600 {
+  border-color: #b9bdc8 !important;
+}
+
+/* Light-mode icon colors for source file types. */
+html.light .chat-source-drawer .text-blue-600 {
+  color: #2563eb !important;
+}
+
+html.light .chat-source-drawer .text-rose-500 {
+  color: #ef4444 !important;
+}
+
+html.light .chat-source-drawer .text-emerald-600 {
+  color: #16a34a !important;
+}
+
+html.light .chat-source-drawer .text-violet-600 {
+  color: #6d28d9 !important;
+}
+
+/* Cards/tables/tooltips elsewhere retain balanced light contrast. */
+html.light .panel {
+  background: #ffffff !important;
+  border-color: #e5e5ea !important;
+  box-shadow: 0 1px 2px rgba(36, 38, 51, .025), 0 7px 22px rgba(36, 38, 51, .025) !important;
+}
+
+html.light .recharts-cartesian-grid line {
+  stroke: #e6e6eb !important;
+  stroke-opacity: .72 !important;
+}
+
+html.light .recharts-cartesian-axis-tick-value,
+html.light .recharts-legend-item-text {
+  fill: #666976 !important;
+  color: #666976 !important;
+}
+
+html.light .recharts-default-tooltip {
+  background: #ffffff !important;
+  border-color: #e1e2e7 !important;
+  color: #242633 !important;
+  box-shadow: 0 7px 20px rgba(36, 38, 51, .07) !important;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #f2f2f5;
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: #c9cad1;
+}
+
+/* =========================================================
+   Project-wide reference light theme refinement
+   Applies ONLY when html.light is active.
+   Dark mode and all application behavior remain unchanged.
+   ========================================================= */
+
+/* Core canvas and white-card system */
+html.light {
+  --dm-bg: #f6f5f7;
+  --dm-bg-soft: #f8f8fa;
+  --dm-sidebar: #fbfbfd;
+  --dm-header: rgba(255, 255, 255, .97);
+  --dm-panel: #ffffff;
+  --dm-panel-solid: #ffffff;
+  --dm-panel-soft: #f8f8fa;
+  --dm-border: #e5e5ea;
+  --dm-border-strong: #d7d8e0;
+  --dm-text: #242633;
+  --dm-text-soft: #3d4156;
+  --dm-muted: #5b5d6a;
+  --dm-subtle: #737688;
+  --dm-input: #fafafb;
+  --dm-input-text: #242633;
+  --dm-tooltip-bg: #ffffff;
+  --dm-nav-active-text: #5a20d9;
+  --dm-shadow: 0 1px 2px rgba(24, 24, 36, .03), 0 8px 26px rgba(24, 24, 36, .04);
+  --dm-chart-grid: #e6e6eb;
+}
+
+html.light body,
+html.light .app-shell,
+html.light .desktop-content,
+html.light .desktop-content > main,
+html.light .dashboard-page,
+html.light .documents-page,
+html.light .summary-page,
+html.light .citations-page,
+html.light .page-pad,
+html.light .chat-page {
+  background: #f6f5f7 !important;
+  color: #242633 !important;
+}
+
+/* Shared cards: clean white surfaces, slightly roomier only in light mode. */
+html.light .panel {
+  background: #ffffff !important;
+  border-color: #e5e5ea !important;
+  border-radius: 14px !important;
+  box-shadow: var(--dm-shadow) !important;
+}
+
+html.light .panel[class~="p-3"] {
+  padding: 1rem !important;
+}
+
+html.light .panel[class~="p-4"] {
+  padding: 1.125rem !important;
+}
+
+html.light .panel[class~="p-5"] {
+  padding: 1.375rem !important;
+}
+
+html.light .panel[class~="p-6"] {
+  padding: 1.625rem !important;
+}
+
+@media (min-width: 640px) {
+  html.light .panel[class~="sm:p-4"] {
+    padding: 1.125rem !important;
+  }
+
+  html.light .panel[class~="sm:p-5"] {
+    padding: 1.375rem !important;
+  }
+
+  html.light .panel[class~="sm:p-6"] {
+    padding: 1.625rem !important;
+  }
+}
+
+/* Shared typography and borders */
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light .font-bold,
+html.light .font-semibold {
+  color: #242633;
+}
+
+html.light .text-white,
+html.light .text-slate-100,
+html.light .text-slate-200,
+html.light .text-slate-300 {
+  color: #242633 !important;
+}
+
+html.light .text-slate-400 {
+  color: #5b5d6a !important;
+}
+
+html.light .text-slate-500,
+html.light .text-slate-600,
+html.light .text-slate-700 {
+  color: #737688 !important;
+}
+
+html.light .border-slate-900,
+html.light .border-slate-800,
+html.light .border-slate-800\/90,
+html.light .border-slate-800\/75,
+html.light .border-slate-700,
+html.light .divide-slate-800 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e5e5ea !important;
+}
+
+html.light .bg-ink-950,
+html.light .bg-\[\#020617\],
+html.light .bg-\[\#020718\] {
+  background: #f6f5f7 !important;
+}
+
+html.light .bg-ink-900,
+html.light .bg-ink-900\/30,
+html.light .bg-ink-900\/40,
+html.light .bg-ink-900\/80,
+html.light .bg-\[\#03091a\],
+html.light .bg-\[\#050b1c\],
+html.light .bg-\[\#081126\],
+html.light .bg-\[\#0a1429\] {
+  background: #ffffff !important;
+}
+
+html.light .bg-ink-800,
+html.light .bg-slate-900,
+html.light .bg-slate-900\/35,
+html.light .bg-slate-900\/40,
+html.light .bg-slate-900\/60,
+html.light .bg-slate-800\/70,
+html.light .bg-slate-800\/80 {
+  background: #f8f8fa !important;
+}
+
+/* Inputs, selectors and secondary controls */
+html.light .field,
+html.light input:not([type="checkbox"]):not([type="range"]),
+html.light textarea,
+html.light select {
+  background: #fafafb !important;
+  border-color: #d7d8e0 !important;
+  color: #242633 !important;
+}
+
+html.light .field::placeholder,
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #8a8d99 !important;
+}
+
+html.light .btn-secondary,
+html.light button.border-slate-800,
+html.light button.border-slate-700 {
+  background: #ffffff !important;
+  border-color: #dedfe5 !important;
+  color: #4d2aa6 !important;
+}
+
+html.light .btn-secondary:hover,
+html.light button.border-slate-800:hover,
+html.light button.border-slate-700:hover {
+  background: #f8f5ff !important;
+  border-color: #c9b9ee !important;
+}
+
+html.light .btn-primary {
+  color: #ffffff !important;
+  box-shadow: 0 6px 18px rgba(109, 40, 217, .16) !important;
+}
+
+/* Sidebar / header consistency */
+html.light .desktop-sidebar {
+  background: #fbfbfd !important;
+  border-color: #e6e6eb !important;
+  box-shadow: 6px 0 20px rgba(36, 38, 51, .025) !important;
+}
+
+html.light .desktop-sidebar a {
+  color: #4f5260 !important;
+}
+
+html.light .desktop-sidebar a svg {
+  color: #686b78;
+}
+
+html.light .desktop-sidebar a[aria-current="page"] {
+  background: #f1ebfb !important;
+  color: #5a20d9 !important;
+  border-color: transparent !important;
+  box-shadow: inset 3px 0 0 #7c3aed !important;
+}
+
+html.light .desktop-sidebar a[aria-current="page"] svg {
+  color: #6d28d9 !important;
+}
+
+html.light .desktop-sidebar a:not([aria-current="page"]):hover {
+  background: #f3f1f8 !important;
+  color: #4b22a8 !important;
+}
+
+html.light .desktop-content > header {
+  background: rgba(255, 255, 255, .97) !important;
+  border-color: #e5e5ea !important;
+  box-shadow: 0 1px 0 rgba(36, 38, 51, .025) !important;
+}
+
+/* Dashboard */
+html.light .dashboard-metric {
+  min-height: 112px;
+}
+
+html.light .dashboard-metric .border-violet-900\/60,
+html.light .border-violet-900\/60 {
+  background: #f4efff !important;
+  border-color: #d8c8f7 !important;
+  color: #6d28d9 !important;
+}
+
+html.light .dashboard-metric .border-emerald-900\/60,
+html.light .border-emerald-900\/60 {
+  background: #eefaf3 !important;
+  border-color: #c8ead6 !important;
+  color: #15803d !important;
+}
+
+html.light .dashboard-metric .border-blue-900\/60,
+html.light .border-blue-900\/60 {
+  background: #eff5ff !important;
+  border-color: #c8d9fb !important;
+  color: #2563eb !important;
+}
+
+html.light .dashboard-metric .border-amber-900\/60,
+html.light .border-amber-900\/60 {
+  background: #fff8e9 !important;
+  border-color: #efd49a !important;
+  color: #a16207 !important;
+}
+
+html.light .dashboard-page .recharts-cartesian-grid line {
+  stroke: #e6e6eb !important;
+  stroke-opacity: .72 !important;
+}
+
+html.light .dashboard-page .recharts-cartesian-axis-tick-value,
+html.light .dashboard-page .recharts-legend-item-text {
+  fill: #666976 !important;
+  color: #666976 !important;
+}
+
+html.light .dashboard-page .recharts-default-tooltip {
+  background: #ffffff !important;
+  border-color: #e1e2e7 !important;
+  color: #242633 !important;
+  box-shadow: 0 7px 20px rgba(36, 38, 51, .07) !important;
+}
+
+html.light .dashboard-page button.hover\:bg-slate-900\/40:hover,
+html.light .dashboard-page button.hover\:bg-slate-900\/35:hover {
+  background: #faf9fd !important;
+}
+
+/* Documents: reference-style white cards and file-type color coding. */
+html.light .documents-page .document-grid-card {
+  min-height: 132px;
+  padding: 1.125rem !important;
+  background: #ffffff !important;
+  border-color: #e3e4e9 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 2px rgba(36, 38, 51, .025), 0 6px 18px rgba(36, 38, 51, .025) !important;
+}
+
+html.light .documents-page .document-grid-card:hover {
+  border-color: #cfc4e9 !important;
+  box-shadow: 0 8px 22px rgba(74, 55, 120, .07) !important;
+}
+
+html.light .documents-page [data-document-type="PDF"] {
+  color: #ef4444 !important;
+}
+
+html.light .documents-page .document-type-icon[data-document-type="PDF"] {
+  background: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+}
+
+html.light .documents-page [data-document-type="DOC"],
+html.light .documents-page [data-document-type="DOCX"] {
+  color: #2563eb !important;
+}
+
+html.light .documents-page .document-type-icon[data-document-type="DOC"],
+html.light .documents-page .document-type-icon[data-document-type="DOCX"] {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+
+html.light .documents-page [data-document-type="XLS"],
+html.light .documents-page [data-document-type="XLSX"],
+html.light .documents-page [data-document-type="CSV"] {
+  color: #16a34a !important;
+}
+
+html.light .documents-page .document-type-icon[data-document-type="XLS"],
+html.light .documents-page .document-type-icon[data-document-type="XLSX"],
+html.light .documents-page .document-type-icon[data-document-type="CSV"] {
+  background: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+}
+
+html.light .documents-page [data-document-type="TXT"] {
+  color: #64748b !important;
+}
+
+html.light .documents-page .document-type-icon[data-document-type="TXT"] {
+  background: #f5f3ff !important;
+  border-color: #ddd6fe !important;
+}
+
+html.light .documents-page table thead {
+  background: #fafafb !important;
+}
+
+html.light .documents-page table tbody tr {
+  background: #ffffff !important;
+}
+
+html.light .documents-page table tbody tr:hover {
+  background: #faf9fd !important;
+}
+
+html.light .documents-page .rounded-full.border.bg-violet-950\/45,
+html.light .documents-page button.bg-violet-950\/45 {
+  background: #f1ebfb !important;
+  border-color: #bca7ed !important;
+  color: #5a20d9 !important;
+}
+
+/* Summaries */
+html.light .summary-page > .panel:first-child {
+  border-color: #e3e4e9 !important;
+}
+
+html.light .summary-page > .panel:last-child {
+  min-height: 500px;
+}
+
+html.light .summary-page .theme-segment {
+  background: #fafafb !important;
+  border-color: #dedfe5 !important;
+  color: #5b5d6a !important;
+}
+
+html.light .summary-page .theme-segment.bg-violet-950\/40 {
+  background: #f1ebfb !important;
+  border-color: #bca7ed !important;
+  color: #5a20d9 !important;
+}
+
+html.light .summary-page .prose,
+html.light .summary-page .prose * {
+  color: #343746 !important;
+}
+
+/* Comparisons: shared panel and nested evidence/result cards */
+html.light main .panel .bg-ink-800,
+html.light main .panel .bg-slate-900\/40,
+html.light main .panel .bg-slate-900\/60 {
+  background: #f9f9fb !important;
+  border-color: #e5e5ea !important;
+}
+
+html.light main .panel .border-violet-800\/60,
+html.light main .panel .border-violet-800\/70,
+html.light main .panel .border-violet-700 {
+  border-color: #cbbbef !important;
+}
+
+html.light main .panel .bg-violet-950\/15,
+html.light main .panel .bg-violet-950\/20,
+html.light main .panel .bg-violet-950\/30,
+html.light main .panel .bg-violet-950\/40 {
+  background: #f5f0fd !important;
+}
+
+/* Citations */
+html.light .citations-page .citation-card {
+  min-height: 196px;
+  padding: 1.125rem !important;
+  background: #ffffff !important;
+  border-color: #e3e4e9 !important;
+}
+
+html.light .citations-page .citation-card:hover {
+  border-color: #cfc4e9 !important;
+  box-shadow: 0 8px 22px rgba(74, 55, 120, .07) !important;
+}
+
+html.light .citations-page .border-emerald-900,
+html.light .citations-page .border-emerald-900\/70 {
+  border-color: #c8ead6 !important;
+}
+
+html.light .citations-page .bg-emerald-950\/30,
+html.light .citations-page .bg-emerald-950\/40 {
+  background: #eefaf3 !important;
+}
+
+html.light .citations-page .text-emerald-400 {
+  color: #15803d !important;
+}
+
+/* Settings */
+html.light .page-pad .settings-grid .panel {
+  border-color: #e3e4e9 !important;
+}
+
+html.light .page-pad .bg-violet-950,
+html.light .page-pad .bg-violet-950\/15 {
+  background: #f1ebfb !important;
+  color: #5a20d9 !important;
+}
+
+html.light .page-pad .bg-\[\#03091a\] {
+  background: #fafafb !important;
+  border-color: #dedfe5 !important;
+}
+
+html.light .page-pad .text-violet-300 {
+  color: #6d28d9 !important;
+}
+
+/* Status chips across Dashboard/Documents/Citations/Settings */
+html.light .bg-emerald-950\/30,
+html.light .bg-emerald-950\/40,
+html.light .bg-emerald-950\/50 {
+  background: #eefaf3 !important;
+}
+
+html.light .border-emerald-900,
+html.light .border-emerald-900\/70,
+html.light .border-emerald-900\/80 {
+  border-color: #c8ead6 !important;
+}
+
+html.light .text-emerald-300,
+html.light .text-emerald-400 {
+  color: #15803d !important;
+}
+
+html.light .bg-amber-950\/20,
+html.light .bg-amber-950\/30,
+html.light .bg-amber-950\/40,
+html.light .bg-amber-950\/50,
+html.light .bg-amber-950 {
+  background: #fff8e9 !important;
+}
+
+html.light .border-amber-900,
+html.light .border-amber-900\/70,
+html.light .border-amber-900\/80 {
+  border-color: #efd49a !important;
+}
+
+html.light .text-amber-300,
+html.light .text-amber-400 {
+  color: #946000 !important;
+}
+
+html.light .bg-rose-950\/20,
+html.light .bg-rose-950\/30,
+html.light .bg-rose-950\/40 {
+  background: #fff1f2 !important;
+}
+
+html.light .border-rose-900,
+html.light .border-rose-900\/70,
+html.light .border-rose-900\/80 {
+  border-color: #fecdd3 !important;
+}
+
+html.light .text-rose-300,
+html.light .text-rose-400 {
+  color: #be123c !important;
+}
+
+/* RAG Sources Panel retains the same file-card system as Documents. */
+html.light .chat-source-drawer button {
+  min-height: 52px;
+  padding: .75rem !important;
+  background: #ffffff !important;
+  border-color: #e3e4e9 !important;
+}
+
+html.light .chat-source-drawer button:hover {
+  background: #faf9fd !important;
+  border-color: #cfc4e9 !important;
+}
+
+html.light .chat-source-drawer button.border-violet-700 {
+  background: #faf7ff !important;
+  border-color: #bda9ed !important;
+}
+
+/* Keep focus treatment consistent and visible. */
+html.light button:focus-visible,
+html.light a:focus-visible,
+html.light input:focus-visible,
+html.light textarea:focus-visible,
+html.light select:focus-visible {
+  outline: 2px solid rgba(109, 40, 217, .72);
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   Completed Phase-15 baseline — requested light-mode UI fixes
+   Light-mode overrides only. Existing dark-mode utilities remain untouched.
+   ========================================================= */
+
+/* One reference document-card language across repositories, selectors,
+   multi-document dropdowns, and the RAG source panel. */
+html.light .document-card-ui {
+  min-height: 56px;
+  gap: 10px !important;
+  padding: 12px !important;
+  background: #ffffff !important;
+  border: 1px solid #dfe1e7 !important;
+  border-radius: 9px !important;
+  box-shadow: 0 1px 2px rgba(36, 38, 51, .025) !important;
+  color: #242633 !important;
+}
+
+html.light .document-card-ui:hover {
+  background: #ffffff !important;
+  border-color: #c8b7ee !important;
+  box-shadow: 0 2px 7px rgba(90, 32, 217, .06) !important;
+}
+
+html.light .document-card-ui[aria-selected="true"],
+html.light .document-card-ui[aria-pressed="true"],
+html.light .document-card-ui.border-violet-500,
+html.light .document-card-ui.border-violet-600,
+html.light .document-card-ui.border-violet-700 {
+  background: #ffffff !important;
+  border-color: #c6b4ee !important;
+  box-shadow: 0 0 0 1px rgba(109, 40, 217, .04) !important;
+}
+
+html.light .document-card-copy {
+  min-width: 0;
+}
+
+html.light .document-card-title {
+  color: #242633 !important;
+  font-size: 11px !important;
+  line-height: 1.25rem !important;
+  font-weight: 600 !important;
+}
+
+html.light .document-card-meta {
+  color: #737688 !important;
+  font-size: 9px !important;
+  line-height: 1rem !important;
+  font-weight: 400 !important;
+}
+
+/* Reference uses a clean colored file glyph rather than a filled tile. */
+html.light .document-card-icon-wrap {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+html.light .document-card-icon {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+html.light [data-document-type="PDF"] .document-card-icon,
+html.light .document-card-icon[data-document-type="PDF"] {
+  color: #ef4444 !important;
+}
+
+html.light [data-document-type="DOC"] .document-card-icon,
+html.light [data-document-type="DOCX"] .document-card-icon,
+html.light .document-card-icon[data-document-type="DOC"],
+html.light .document-card-icon[data-document-type="DOCX"] {
+  color: #2563eb !important;
+}
+
+html.light [data-document-type="XLS"] .document-card-icon,
+html.light [data-document-type="XLSX"] .document-card-icon,
+html.light [data-document-type="CSV"] .document-card-icon,
+html.light .document-card-icon[data-document-type="XLS"],
+html.light .document-card-icon[data-document-type="XLSX"],
+html.light .document-card-icon[data-document-type="CSV"] {
+  color: #16a34a !important;
+}
+
+html.light [data-document-type="TXT"] .document-card-icon,
+html.light .document-card-icon[data-document-type="TXT"] {
+  color: #64748b !important;
+}
+
+html.light .document-card-select {
+  width: 17px !important;
+  height: 17px !important;
+  min-width: 17px !important;
+  border: 1px solid #b9bdc8 !important;
+  background: #ffffff !important;
+  color: transparent !important;
+  box-shadow: none !important;
+}
+
+html.light .document-card-ui[aria-selected="true"] .document-card-select,
+html.light .document-card-ui[aria-pressed="true"] .document-card-select {
+  border-color: #7c3aed !important;
+  background: #7c3aed !important;
+  color: #ffffff !important;
+}
+
+/* Documents list mode keeps its information columns/actions, but each row
+   uses the same white-card boundary, spacing, and hierarchy in light mode. */
+html.light .documents-page table {
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  padding: 0 12px 12px;
+}
+
+html.light .documents-page thead tr {
+  background: transparent !important;
+}
+
+html.light .documents-page .document-list-card {
+  background: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(36, 38, 51, .025) !important;
+}
+
+html.light .documents-page .document-list-card > td {
+  border-top: 1px solid #dfe1e7 !important;
+  border-bottom: 1px solid #dfe1e7 !important;
+}
+
+html.light .documents-page .document-list-card > td:first-child {
+  border-left: 1px solid #dfe1e7 !important;
+  border-radius: 9px 0 0 9px;
+}
+
+html.light .documents-page .document-list-card > td:last-child {
+  border-right: 1px solid #dfe1e7 !important;
+  border-radius: 0 9px 9px 0;
+}
+
+html.light .documents-page .document-list-card:hover > td {
+  border-top-color: #c8b7ee !important;
+  border-bottom-color: #c8b7ee !important;
+  background: #ffffff !important;
+}
+
+html.light .documents-page .document-list-card:hover > td:first-child {
+  border-left-color: #c8b7ee !important;
+}
+
+html.light .documents-page .document-list-card:hover > td:last-child {
+  border-right-color: #c8b7ee !important;
+}
+
+/* Keep dropdown chrome in the same white-card family. Inline dark-mode
+   scrollbar rules are overridden only while html.light is active. */
+html.light .theme-dropdown {
+  background: #ffffff !important;
+  border-color: #dfe1e7 !important;
+  box-shadow: 0 12px 30px rgba(36, 38, 51, .10) !important;
+}
+
+html.light .docmind-document-scroll::-webkit-scrollbar-track {
+  background: #f0eef6 !important;
+}
+
+html.light .docmind-document-scroll::-webkit-scrollbar-thumb {
+  background: #8b5cf6 !important;
+}
+
+/* Top-right account identity: semantic hook avoids the broad bg-slate light
+   override that previously washed the avatar out. */
+html.light .header-account-avatar {
+  background: #6d28d9 !important;
+  border: 1px solid #5b21b6 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 7px rgba(109, 40, 217, .18) !important;
+}
+
+html.light .header-account-avatar:hover {
+  background: #5b21b6 !important;
+  color: #ffffff !important;
+}
+
+/* Sidebar storage indicator: light-gray track + purple progress fill in light mode.
+   Dark mode remains unchanged. */
+html.light .storage-usage-track {
+  background: #d9dce3 !important;
+  border: 1px solid #d1d5db !important;
+}
+
+html.light .storage-usage-bar {
+  background: #7c3aed !important;
+  box-shadow: 0 0 0 1px rgba(109, 40, 217, .10), 0 1px 4px rgba(109, 40, 217, .16) !important;
+}
+
+/* Chat toolbar actions share the same visible purple text/icon and bordered
+   button treatment in light mode. The dark variants remain exactly as before. */
+html.light .chat-page .chat-toolbar-action {
+  background: #ffffff !important;
+  border: 1px solid #cfc4e9 !important;
+  color: #5a20d9 !important;
+  box-shadow: 0 1px 2px rgba(36, 38, 51, .025) !important;
+}
+
+html.light .chat-page .chat-toolbar-action svg {
+  color: #6d28d9 !important;
+  stroke: currentColor !important;
+}
+
+html.light .chat-page .chat-toolbar-action:hover:not(:disabled) {
+  background: #f8f5ff !important;
+  border-color: #bda9ed !important;
+  color: #4c1d95 !important;
+}
+
+html.light .chat-page .chat-toolbar-action:disabled {
+  background: #fbfaff !important;
+  border-color: #ddd5ee !important;
+  color: #8e78bf !important;
+  opacity: .72 !important;
+}
+
+
+/* Light-only content added to match the reference card while keeping the
+   original dark-mode DOM presentation visually unchanged. */
+html.light .document-card-light-only {
+  display: block !important;
+}
+
+html.light .document-viewer-file-card {
+  flex-wrap: wrap;
+}
+
+html.light .dashboard-page .document-card-ui,
+html.light .document-viewer-file-card,
+html.light .document-card-ui[data-document-type] {
+  background: #ffffff !important;
+}
+
+
+/* =========================================================
+   Completed Phase-15 baseline — UI maintenance round 2
+   Only the explicitly requested cross-theme typography/icon/hover
+   adjustments plus Settings/Profile light-mode contrast are changed.
+   ========================================================= */
+
+/* The sticky AppShell title is the single route-level page heading used
+   throughout the authenticated frontend. Its size is increased slightly. */
+.app-page-heading {
+  line-height: 1.35rem;
+}
+
+/* Document icon colors are standardized everywhere a document-specific
+   icon uses the existing document-card-icon semantic hook. */
+[data-document-type="PDF"] .document-card-icon,
+.document-card-icon[data-document-type="PDF"] {
+  color: #ef4444 !important;
+}
+
+[data-document-type="DOC"] .document-card-icon,
+[data-document-type="DOCX"] .document-card-icon,
+.document-card-icon[data-document-type="DOC"],
+.document-card-icon[data-document-type="DOCX"] {
+  color: #2563eb !important;
+}
+
+[data-document-type="XLS"] .document-card-icon,
+[data-document-type="XLSX"] .document-card-icon,
+[data-document-type="CSV"] .document-card-icon,
+.document-card-icon[data-document-type="XLS"],
+.document-card-icon[data-document-type="XLSX"],
+.document-card-icon[data-document-type="CSV"] {
+  color: #16a34a !important;
+}
+
+[data-document-type="TXT"] .document-card-icon,
+.document-card-icon[data-document-type="TXT"] {
+  color: #64748b !important;
+}
+
+/* Chat & Ask toolbar hover is intentionally changed in BOTH themes, as
+   requested. Default dark-mode button styling remains untouched. */
+html.dark .chat-page .chat-toolbar-action:hover:not(:disabled) {
+  background: #4c1d95 !important;
+  border-color: #8b5cf6 !important;
+  color: #f5f3ff !important;
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, .15), 0 6px 16px rgba(76, 29, 149, .22) !important;
+}
+
+html.dark .chat-page .chat-toolbar-action:hover:not(:disabled) svg {
+  color: #f5f3ff !important;
+  stroke: currentColor !important;
+}
+
+html.light .chat-page .chat-toolbar-action:hover:not(:disabled) {
+  background: #ede9fe !important;
+  border-color: #8b5cf6 !important;
+  color: #5b21b6 !important;
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, .08), 0 5px 14px rgba(109, 40, 217, .12) !important;
+}
+
+html.light .chat-page .chat-toolbar-action:hover:not(:disabled) svg {
+  color: #5b21b6 !important;
+  stroke: currentColor !important;
+}
+
+/* Settings/Profile light-mode identity icons use explicit semantic hooks so
+   broad light-theme utility overrides cannot reduce their contrast. */
+html.light .settings-heading-icon-tile,
+html.light .profile-user-icon-tile {
+  background: #6d28d9 !important;
+  border: 1px solid #5b21b6 !important;
+  color: #ffffff !important;
+}
+
+html.light .settings-heading-icon,
+html.light .profile-user-icon {
+  color: #ffffff !important;
+  stroke: currentColor !important;
+}
+
+html.light .settings-profile-icon {
+  color: #6d28d9 !important;
+  stroke: currentColor !important;
+}
+
+
+/* =========================================================
+   Completed Phase-15 baseline — UI maintenance round 3
+   Reference-matched multi-document selector and citation viewer refinements.
+   Layout/theme refinements below are light-mode scoped so existing dark-mode
+   styling remains unchanged. File-type glyph colors stay standardized globally.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   Multi-document dropdown — supplied light-mode reference
+   --------------------------------------------------------- */
+html.light .multi-document-dropdown .multi-document-trigger {
+  min-height: 52px !important;
+  padding: 0 14px !important;
+  background: #ffffff !important;
+  border: 1.5px solid #a970ff !important;
+  border-radius: 9px !important;
+  color: #17131d !important;
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, .025) !important;
+}
+
+html.light .multi-document-dropdown .multi-document-trigger:hover,
+html.light .multi-document-dropdown .multi-document-trigger:focus {
+  background: #ffffff !important;
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, .10) !important;
+}
+
+html.light .multi-document-dropdown .multi-document-trigger-icon {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 7px !important;
+  background: #f7f1ff !important;
+  color: #6d28d9 !important;
+}
+
+html.light .multi-document-dropdown .multi-document-trigger-icon svg {
+  width: 18px !important;
+  height: 18px !important;
+  color: #6d28d9 !important;
+  stroke: currentColor !important;
+}
+
+html.light .multi-document-dropdown .multi-document-trigger-text {
+  color: #17131d !important;
+  font-size: 13px !important;
+  line-height: 1.2rem !important;
+  font-weight: 400 !important;
+}
+
+html.light
+  .multi-document-dropdown
+  .multi-document-trigger-placeholder {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+}
+
+html.light .multi-document-dropdown .multi-document-trigger > svg {
+  width: 18px !important;
+  height: 18px !important;
+  color: #17131d !important;
+  stroke-width: 2.25;
+}
+
+html.light .multi-document-dropdown .multi-document-selected-chips {
+  margin-top: 9px !important;
+  gap: 7px !important;
+}
+
+html.light .multi-document-dropdown .multi-document-chip {
+  min-height: 36px !important;
+  gap: 9px !important;
+  padding: 7px 9px !important;
+  background: #ffffff !important;
+  border: 1.5px solid #c49aff !important;
+  border-radius: 9px !important;
+  color: #17131d !important;
+  box-shadow: 0 1px 2px rgba(36, 38, 51, .025) !important;
+}
+
+html.light .multi-document-dropdown .multi-document-chip-name {
+  max-width: 280px !important;
+  color: #17131d !important;
+  font-size: 11px !important;
+  line-height: 1rem !important;
+  font-weight: 600 !important;
+}
+
+html.light .multi-document-dropdown .multi-document-chip .document-card-icon {
+  width: 15px !important;
+  height: 15px !important;
+}
+
+html.light .multi-document-dropdown .multi-document-chip-remove {
+  display: grid !important;
+  width: 19px !important;
+  height: 19px !important;
+  place-items: center !important;
+  padding: 0 !important;
+  border-radius: 5px !important;
+  color: #6b7280 !important;
+}
+
+html.light .multi-document-dropdown .multi-document-chip-remove:hover {
+  background: #f2ecff !important;
+  color: #5b21b6 !important;
+}
+
+html.light .multi-document-dropdown .multi-document-menu {
+  margin-top: 8px !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  border: 1px solid #e1dce9 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 16px 34px rgba(48, 38, 68, .13) !important;
+}
+
+html.light .multi-document-dropdown .multi-document-search-row {
+  padding: 10px !important;
+  background: #ffffff !important;
+  border-color: #ebe7f0 !important;
+}
+
+html.light .multi-document-dropdown .multi-document-search {
+  height: 37px !important;
+  padding-left: 34px !important;
+  background: #ffffff !important;
+  border: 1px solid #d9d5df !important;
+  border-radius: 8px !important;
+  color: #17131d !important;
+  font-size: 11px !important;
+  box-shadow: none !important;
+}
+
+html.light .multi-document-dropdown .multi-document-search::placeholder {
+  color: #96909c !important;
+}
+
+html.light .multi-document-dropdown .multi-document-search-row .text-slate-500 {
+  color: #7c7482 !important;
+}
+
+html.light .multi-document-dropdown .multi-document-list {
+  max-height: 220px !important;
+  padding: 8px 9px !important;
+  background: #ffffff !important;
+  scrollbar-color: #8b5cf6 #f0ecf6;
+  scrollbar-width: thin;
+}
+
+html.light .multi-document-dropdown .multi-document-list::-webkit-scrollbar {
+  width: 7px !important;
+}
+
+html.light .multi-document-dropdown .multi-document-list::-webkit-scrollbar-track {
+  background: #f0ecf6 !important;
+  border-radius: 999px !important;
+}
+
+html.light .multi-document-dropdown .multi-document-list::-webkit-scrollbar-thumb {
+  background: #8b5cf6 !important;
+  border-radius: 999px !important;
+  border: 1px solid #f0ecf6 !important;
+}
+
+html.light .multi-document-dropdown .multi-document-list::-webkit-scrollbar-thumb:hover {
+  background: #7c3aed !important;
+}
+
+html.light .multi-document-dropdown .multi-document-option {
+  min-height: 56px !important;
+  gap: 10px !important;
+  padding: 10px 11px !important;
+  background: #ffffff !important;
+  border: 1px solid #e1e2e7 !important;
+  border-radius: 9px !important;
+  box-shadow: none !important;
+}
+
+html.light .multi-document-dropdown .multi-document-option + .multi-document-option {
+  margin-top: 7px !important;
+}
+
+html.light .multi-document-dropdown .multi-document-option:hover:not(:disabled) {
+  background: #fdfcff !important;
+  border-color: #c6a8f5 !important;
+  box-shadow: 0 2px 7px rgba(90, 32, 217, .055) !important;
+}
+
+html.light .multi-document-dropdown .multi-document-option[aria-selected="true"] {
+  background: #ffffff !important;
+  border-color: #ab79f5 !important;
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, .06) !important;
+}
+
+/* The reference uses a clean glyph in selection rows, not a large filled tile. */
+html.light .multi-document-dropdown .multi-document-option .document-card-icon-wrap {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+}
+
+html.light .multi-document-dropdown .multi-document-option .document-card-icon {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+html.light .multi-document-dropdown .multi-document-option .document-card-title {
+  color: #17131d !important;
+  font-size: 11px !important;
+  line-height: 1rem !important;
+  font-weight: 600 !important;
+}
+
+html.light .multi-document-dropdown .multi-document-option .document-card-meta {
+  margin-top: 2px !important;
+  color: #77717d !important;
+  font-size: 9px !important;
+  line-height: .95rem !important;
+}
+
+html.light .multi-document-dropdown .multi-document-option .document-card-select {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  background: #ffffff !important;
+  border: 1px solid #b9b7bf !important;
+  color: transparent !important;
+  box-shadow: none !important;
+}
+
+html.light .multi-document-dropdown .multi-document-option[aria-selected="true"] .document-card-select {
+  background: #7c3aed !important;
+  border-color: #7c3aed !important;
+  color: #ffffff !important;
+}
+
+html.light .multi-document-dropdown .multi-document-footer {
+  min-height: 43px !important;
+  padding: 9px 13px !important;
+  background: #f3eefb !important;
+  border-color: #e0d7ef !important;
+}
+
+html.light .multi-document-dropdown .multi-document-summary {
+  color: #17131d !important;
+  font-size: 10px !important;
+  line-height: 1rem !important;
+  font-weight: 600 !important;
+}
+
+html.light .multi-document-dropdown .multi-document-summary strong {
+  color: #17131d !important;
+  font-weight: 700 !important;
+}
+
+html.light .multi-document-dropdown .multi-document-clear {
+  min-height: 28px !important;
+  padding: 4px 7px !important;
+  border-radius: 6px !important;
+  color: #6d28d9 !important;
+  font-size: 10px !important;
+  line-height: 1rem !important;
+  font-weight: 650 !important;
+}
+
+html.light .multi-document-dropdown .multi-document-clear svg {
+  color: #7c3aed !important;
+  stroke: currentColor !important;
+}
+
+html.light .multi-document-dropdown .multi-document-clear:hover:not(:disabled) {
+  background: #e9defa !important;
+  color: #5b21b6 !important;
+}
+
+/* ---------------------------------------------------------
+   File-type icon tile treatment — light mode only.
+   Glyph colors themselves remain global for both themes:
+   PDF red, DOC/DOCX blue, XLS/XLSX/CSV green, TXT slate.
+   --------------------------------------------------------- */
+html.light [data-document-type="PDF"] .citation-document-icon-tile,
+html.light .citation-document-icon-tile[data-document-type="PDF"] {
+  background: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+}
+
+html.light [data-document-type="DOC"] .citation-document-icon-tile,
+html.light [data-document-type="DOCX"] .citation-document-icon-tile,
+html.light .citation-document-icon-tile[data-document-type="DOC"],
+html.light .citation-document-icon-tile[data-document-type="DOCX"] {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+
+html.light [data-document-type="XLS"] .citation-document-icon-tile,
+html.light [data-document-type="XLSX"] .citation-document-icon-tile,
+html.light [data-document-type="CSV"] .citation-document-icon-tile,
+html.light .citation-document-icon-tile[data-document-type="XLS"],
+html.light .citation-document-icon-tile[data-document-type="XLSX"],
+html.light .citation-document-icon-tile[data-document-type="CSV"] {
+  background: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+}
+
+html.light [data-document-type="TXT"] .citation-document-icon-tile,
+html.light .citation-document-icon-tile[data-document-type="TXT"] {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* ---------------------------------------------------------
+   Citations page — light purple context action hover
+   --------------------------------------------------------- */
+html.light .citations-page .citation-view-context:hover:not(:disabled) {
+  background: #f1ebfb !important;
+  color: #5b21b6 !important;
+}
+
+html.light .citations-page .citation-view-context:hover:not(:disabled) svg {
+  color: #6d28d9 !important;
+  stroke: currentColor !important;
+}
+
+/* ---------------------------------------------------------
+   Vector Chunk Metasheet — compact light-mode scale for 100% zoom
+   --------------------------------------------------------- */
+html.light .citation-viewer-backdrop {
+  padding: 12px !important;
+}
+
+html.light .citation-metasheet {
+  width: min(680px, calc(100vw - 24px)) !important;
+  max-width: 680px !important;
+  max-height: calc(100vh - 24px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  border-radius: 11px !important;
+}
+
+html.light .citation-metasheet-header {
+  padding: 10px 14px !important;
+}
+
+html.light .citation-metasheet-header > div:first-child {
+  font-size: 12px !important;
+}
+
+html.light .citation-metasheet-body {
+  padding: 12px 14px 14px !important;
+}
+
+html.light .citation-metasheet-body > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 12px !important;
+}
+
+html.light .citation-metasheet-body .rounded-xl {
+  border-radius: 9px !important;
+}
+
+html.light .citation-metasheet-body .p-4 {
+  padding: 12px !important;
+}
+
+html.light .citation-metasheet-body .leading-6 {
+  line-height: 1.35rem !important;
+}
+
+html.light .citation-viewer-close {
+  min-height: 31px !important;
+  padding: 6px 9px !important;
+  color: #5f5867 !important;
+}
+
+html.light .citation-viewer-close:hover:not(:disabled) {
+  background: #f1ebfb !important;
+  color: #5b21b6 !important;
+}
+
+html.light .citation-viewer-close:hover:not(:disabled) svg {
+  color: #6d28d9 !important;
+  stroke: currentColor !important;
+}
+
+/* Keep citation document tiles visible at the compact scale shown in the
+   supplied reference while preserving their type-specific light backgrounds. */
+html.light .citation-document-icon-tile {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  border-radius: 8px !important;
+}
+
+html.light .citation-metasheet .citation-document-icon-tile {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+}
+
+/* =========================================================
+   Frozen Phase-15 maintenance — authentication/settings fixes
+   Light-theme visibility refinements are scoped to html.light.
+   Cross-theme rules below are limited to the explicitly requested password
+   validation success treatment and link typography.
+   ========================================================= */
+
+/* Brighter, more visible selected/active purple treatment in light mode. */
+html.light .desktop-sidebar a[aria-current="page"] {
+  background: #eadfff !important;
+  color: #5720c8 !important;
+  box-shadow: inset 3px 0 0 #8b5cf6, 0 3px 10px rgba(109, 40, 217, .06) !important;
+}
+
+html.light .desktop-sidebar a[aria-current="page"] svg {
+  color: #7c3aed !important;
+}
+
+html.light .settings-tab-active {
+  background: #eadfff !important;
+  border: 1px solid #c4a7f5 !important;
+  color: #5b21b6 !important;
+  box-shadow: 0 1px 3px rgba(109, 40, 217, .08) !important;
+}
+
+html.light .theme-segment.bg-violet-950\/40 {
+  background: #eee5ff !important;
+  border-color: #b99aef !important;
+  color: #5b21b6 !important;
+}
+
+/* 8-4 password-rule success is deliberately clear in both themes. */
+.password-rule-success {
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, .55) !important;
+  background: rgba(6, 78, 59, .24) !important;
+}
+
+.password-rule-success svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+.password-rules-badge-complete {
+  background: #4c1d95 !important;
+  border: 1px solid #7c3aed !important;
+  color: #f5f3ff !important;
+}
+
+html.light .password-rule-success {
+  color: #15803d !important;
+  border-color: #86d5a4 !important;
+  background: #f0fbf4 !important;
+}
+
+html.light .password-rules-badge-complete {
+  background: #e7dbff !important;
+  border-color: #b794f4 !important;
+  color: #5b21b6 !important;
+}
+
+/* Recovery links: slightly larger in both themes, dark purple only in light. */
+.auth-recovery-link,
+.auth-back-link {
+  font-size: 12px !important;
+}
+
+html.light .auth-recovery-link,
+html.light .auth-back-link {
+  color: #5b21b6 !important;
+}
+
+html.light .auth-recovery-link:hover,
+html.light .auth-back-link:hover {
+  color: #4c1d95 !important;
+}
+
+/* Recovery/settings feedback remains legible on the light authentication UI. */
+html.light .auth-feedback-error,
+html.light .settings-feedback.auth-feedback-error {
+  background: #fff1f2 !important;
+  border-color: #fda4af !important;
+  color: #9f1239 !important;
+}
+
+html.light .auth-feedback-success,
+html.light .settings-feedback.auth-feedback-success {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #166534 !important;
+}
+
+/* =========================================================
+   Phase-15 maintenance candidate — recovery + active-state visibility
+   Light-mode visual refinements only. Existing dark-mode colors remain intact.
+   ========================================================= */
+
+/* Make selected/active purple states slightly brighter and easier to scan. */
+html.light .desktop-sidebar a[aria-current="page"] {
+  background: #e6d7ff !important;
+  color: #4f1db8 !important;
+  box-shadow: inset 3px 0 0 #8b5cf6, 0 3px 10px rgba(109, 40, 217, .08) !important;
+}
+
+html.light .desktop-sidebar a[aria-current="page"] svg {
+  color: #7c3aed !important;
+}
+
+html.light .settings-tab-active,
+html.light .theme-segment.bg-violet-950\/40 {
+  background: #eadcff !important;
+  border-color: #b88cf4 !important;
+  color: #541db9 !important;
+  box-shadow: 0 1px 3px rgba(109, 40, 217, .09) !important;
+}
+
+html.light .document-card-ui[aria-selected="true"],
+html.light .document-card-ui[aria-pressed="true"],
+html.light .multi-document-dropdown .multi-document-option[aria-selected="true"],
+html.light .chat-source-drawer .document-card-ui[aria-pressed="true"] {
+  background: #f8f2ff !important;
+  border-color: #a970f2 !important;
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, .07) !important;
+}
+
+html.light .document-card-ui[aria-selected="true"] .document-card-select,
+html.light .document-card-ui[aria-pressed="true"] .document-card-select,
+html.light .multi-document-dropdown .multi-document-option[aria-selected="true"] .document-card-select {
+  background: #8b5cf6 !important;
+  border-color: #7c3aed !important;
+  color: #ffffff !important;
+}
+
+html.light .multi-document-dropdown .multi-document-chip {
+  background: #fbf8ff !important;
+  border-color: #b985fb !important;
+}
+
+html.light .documents-page button.bg-violet-950\/45,
+html.light .documents-page .rounded-full.border.bg-violet-950\/45 {
+  background: #e9dcff !important;
+  border-color: #b68bf1 !important;
+  color: #541db9 !important;
+}
+
+/* Authentication recovery feedback must remain high-contrast in light mode. */
+html.light .auth-page .auth-feedback {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.25rem !important;
+}
+
+html.light .auth-page .auth-feedback-error {
+  background: #fff0f2 !important;
+  border-color: #fb7185 !important;
+  color: #9f1239 !important;
+}
+
+html.light .auth-page .auth-feedback-success {
+  background: #ecfdf3 !important;
+  border-color: #6ee7a0 !important;
+  color: #166534 !important;
+}
+
+/* Light-mode-only readability increase; dark keeps its original 10px/medium label. */
+html.light .chat-page .conversation-agent-thread {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: .005em;
+}
+
+/* =========================================================
+   Frozen Phase-15 maintenance — dark-mode document type tiles
+   Dark-mode only. Light mode remains byte-for-byte visually unchanged.
+
+   PDF       = red
+   DOC/DOCX  = blue
+   XLS/XLSX  = green
+   CSV       = green
+   TXT       = dark gray / black
+   ========================================================= */
+
+/* Semantic dark-theme tokens are attached to every existing
+   data-document-type hook. This keeps the same type language across
+   Citations, document cards, dropdowns, RAG source panels, viewers,
+   upload rows and any other document display using the frozen hooks. */
+html.dark [data-document-type="PDF"] {
+  --doc-type-icon: #ef4444;
+  --doc-type-bg: #3b0d14;
+  --doc-type-border: #7f1d2d;
+}
+
+html.dark [data-document-type="DOC"],
+html.dark [data-document-type="DOCX"] {
+  --doc-type-icon: #2563eb;
+  --doc-type-bg: #0b1f3f;
+  --doc-type-border: #1d4ed8;
+}
+
+html.dark [data-document-type="XLS"],
+html.dark [data-document-type="XLSX"],
+html.dark [data-document-type="CSV"] {
+  --doc-type-icon: #16a34a;
+  --doc-type-bg: #052e24;
+  --doc-type-border: #166534;
+}
+
+html.dark [data-document-type="TXT"] {
+  --doc-type-icon: #64748b;
+  --doc-type-bg: #0b0f17;
+  --doc-type-border: #334155;
+}
+
+/* Filled icon tiles. This overrides hard-coded violet/emerald dark tiles
+   without touching dimensions, spacing, radius or any light-mode rule. */
+html.dark [data-document-type] .document-card-icon-wrap,
+html.dark .document-card-icon-wrap[data-document-type],
+html.dark [data-document-type] .citation-document-icon-tile,
+html.dark .citation-document-icon-tile[data-document-type] {
+  background: var(--doc-type-bg) !important;
+  border-color: var(--doc-type-border) !important;
+  color: var(--doc-type-icon) !important;
+}
+
+/* File glyph color follows the same semantic type in every dark-mode
+   document surface, including Citations and the Vector Chunk viewer. */
+html.dark [data-document-type] .document-card-icon,
+html.dark .document-card-icon[data-document-type] {
+  color: var(--doc-type-icon) !important;
+  stroke: currentColor !important;
+}
+
+/* Some frozen components intentionally render a compact glyph without a
+   larger icon-wrap (selected chips, list rows, source rows). Give only
+   those direct glyphs a compact type-matched background. The SVG box size
+   is unchanged, so layout and spacing remain exactly as before. */
+html.dark
+  [data-document-type]:not(.document-card-icon-wrap):not(.citation-document-icon-tile)
+  > .document-card-icon,
+html.dark .document-card-icon[data-document-type] {
+  background: var(--doc-type-bg) !important;
+  border-radius: 4px !important;
+  box-shadow: inset 0 0 0 1px var(--doc-type-border) !important;
+  box-sizing: border-box !important;
+}
+

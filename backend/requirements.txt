@@ -1,0 +1,25 @@
+# Existing backend/runtime dependencies
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg[binary]
+alembic
+pydantic
+pydantic-settings
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+
+# Phase 5 document parsing
+PyMuPDF
+pdfplumber
+python-docx
+openpyxl
+Pillow
+pytesseract
+matplotlib
+
+# Testing
+pytest
+httpx
+reportlab
