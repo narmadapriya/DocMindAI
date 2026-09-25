@@ -1,14 +1,17 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { HashRouter } from "react-router-dom";
 import App from "./App";
 import "./styles/index.css";
 import "./App.css";
 import { initializeTheme } from "./utils/theme";
+
 initializeTheme();
 
-ReactDOM.createRoot(document.getElementById("root")).render(<React.StrictMode>
-    <BrowserRouter>
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <HashRouter>
       <App />
-    </BrowserRouter>
-  </React.StrictMode>);
+    </HashRouter>
+  </React.StrictMode>,
+);

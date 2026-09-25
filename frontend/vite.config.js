@@ -4,6 +4,10 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
 
+  // GitHub Pages project site:
+  // https://narmadapriya.github.io/DocMindAI/
+  base: "/DocMindAI/",
+
   server: {
     host: "127.0.0.1",
     port: 5173,
