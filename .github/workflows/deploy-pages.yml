@@ -41,6 +41,25 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Validate backend URL
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+        run: |
+          if [ -z "$VITE_API_BASE_URL" ]; then
+            echo "::error::Repository secret VITE_API_BASE_URL is not configured."
+            exit 1
+          fi
+
+          case "$VITE_API_BASE_URL" in
+            https://*)
+              echo "Backend URL is configured for HTTPS."
+              ;;
+            *)
+              echo "::error::VITE_API_BASE_URL must be a public HTTPS URL."
+              exit 1
+              ;;
+          esac
+
       - name: Build frontend
         run: npm run build
         env:

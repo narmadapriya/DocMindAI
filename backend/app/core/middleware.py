@@ -5,6 +5,7 @@ import time
 import uuid
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.logging import get_logger, log_event
 from app.core.performance import SLOW_REQUEST_MS
@@ -13,6 +14,22 @@ logger = get_logger(__name__)
 
 
 def register_middleware(app: FastAPI) -> None:
+    # Deployment-only CORS configuration.
+    # This preserves all existing API, authentication, RAG, database,
+    # and business logic while allowing the GitHub Pages frontend to
+    # call the FastAPI backend from a different HTTPS origin.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "https://narmadapriya.github.io",
+            "http://127.0.0.1:5173",
+            "http://localhost:5173",
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     @app.middleware("http")
     async def request_logging(request: Request, call_next):
         request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
