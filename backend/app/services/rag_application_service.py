@@ -463,6 +463,7 @@ class RAGApplicationService:
         document_ids: Sequence[str],
         scope: str = "document",
         section: str | None = None,
+        scope_instructions: str = "",
         top_k: int = 8,
     ) -> dict[str, Any]:
 
@@ -490,6 +491,7 @@ class RAGApplicationService:
                 ),
                 scope=scope,
                 section=section,
+                scope_instructions=scope_instructions,
                 top_k=top_k,
             )
         )

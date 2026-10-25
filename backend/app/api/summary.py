@@ -80,6 +80,7 @@ def summary(
                 ),
                 scope=request.scope,
                 section=request.section,
+                scope_instructions=request.scope_instructions,
                 top_k=request.top_k,
             )
         )

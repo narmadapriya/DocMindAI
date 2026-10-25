@@ -50,6 +50,7 @@ class SummaryService:
         document_ids: List[str],
         scope: str = "document",
         section: str | None = None,
+        scope_instructions: str = "",
         top_k: int = 8,
     ) -> Dict[str, Any]:
         normalized_scope = str(scope or "document").strip().lower()
@@ -78,11 +79,28 @@ class SummaryService:
                     top_k=top_k,
                 )
 
-        result = self.summary_agent.summarize(
-            evidence=evidence,
-            scope=scope,
-            title=section or "",
-        )
+        instructions = str(scope_instructions or "").strip()
+        # The default Phase-15 generation path is byte-for-byte equivalent
+        # when the new optional field is omitted or blank.
+        if instructions and normalized_scope in self.WHOLE_DOCUMENT_SCOPES:
+            # The reference report formatter also uses evidence, so give it
+            # the same focused subset used to generate the requested text.
+            focused_evidence = self.summary_agent._focus_summary_evidence(
+                evidence, instructions
+            )
+            result = self.summary_agent.summarize(
+                evidence=focused_evidence,
+                scope=scope,
+                title=section or "",
+                scope_instructions=instructions,
+            )
+        else:
+            focused_evidence = evidence
+            result = self.summary_agent.summarize(
+                evidence=evidence,
+                scope=scope,
+                title=section or "",
+            )
 
         # Presentation-only Phase-15 hardening. Retrieval, evidence selection,
         # summarization logic, API schemas, authentication, and persistence are
@@ -90,7 +108,7 @@ class SummaryService:
         # into the final DocMindAI display standard.
         return self._format_summary_presentation(
             result=result,
-            evidence=evidence,
+            evidence=focused_evidence,
             scope=normalized_scope,
         )
 

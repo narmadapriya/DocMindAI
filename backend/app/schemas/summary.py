@@ -20,6 +20,9 @@ class SummaryRequest(BaseModel):
 
     section: str | None = None
 
+    # Optional user focus; `scope` still specifies the summary type.
+    scope_instructions: str = Field(default="", max_length=300)
+
     top_k: int = Field(
         default=8,
         ge=1,

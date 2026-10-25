@@ -1,6 +1,7 @@
 import React, {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -10,6 +11,8 @@ import remarkGfm from "remark-gfm";
 import {
   BookOpen,
   Download,
+  Info,
+  RefreshCw,
   Sparkles,
 } from "lucide-react";
 
@@ -55,6 +58,7 @@ import {
 
 const MIN_SUMMARY_DOCUMENTS = 1;
 const MAX_SUMMARY_DOCUMENTS = 1;
+const MAX_SCOPE_LENGTH = 300;
 
 
 export default function Summaries() {
@@ -101,6 +105,10 @@ export default function Summaries() {
   ] = useState(
     null,
   );
+
+  const [scopeInstructions, setScopeInstructions] = useState("");
+  // Invalidates an in-flight response when Clear is clicked.
+  const generationRef = useRef(0);
 
   const [
     loading,
@@ -190,8 +198,11 @@ export default function Summaries() {
         return;
       }
 
+      const generation = ++generationRef.current;
       setLoading(true);
       setError("");
+      setResult(null);
+      setCitation(null);
 
       try {
         const data =
@@ -214,25 +225,43 @@ export default function Summaries() {
               summaryType === "executive"
                 ? "executive"
                 : "document",
+
+            // Optional, backward-compatible field. Do not replace the
+            // existing `scope` (file/executive) request parameter.
+            scope_instructions: scopeInstructions.trim(),
           });
 
-        setResult(data);
+        if (generation === generationRef.current) {
+          setResult(data);
+        }
       } catch (
         requestError
       ) {
-        setError(
-          getErrorMessage(
-            requestError,
-          ),
-        );
+        if (generation === generationRef.current) {
+          setError(getErrorMessage(requestError));
+        }
       } finally {
-        setLoading(false);
+        if (generation === generationRef.current) {
+          setLoading(false);
+        }
       }
     };
 
 
+  const clear = () => {
+    generationRef.current += 1;
+    setSummaryType("file");
+    setSelected([]);
+    setScopeInstructions("");
+    setResult(null);
+    setError("");
+    setCitation(null);
+    setLoading(false);
+  };
+
+
   return (
-    <div className="summary-page grid gap-3 p-3 sm:p-4 xl:grid-cols-[350px_minmax(0,1fr)]">
+    <div className="summary-page grid gap-3 p-3 sm:p-4 xl:grid-cols-[minmax(350px,1fr)_minmax(0,2fr)]">
 
       <Card className="h-fit p-3 sm:p-4">
 
@@ -323,6 +352,29 @@ export default function Summaries() {
         </div>
 
 
+        <div className="mt-4">
+          <label htmlFor="summary-scope-instructions" className="label flex items-center gap-1.5 text-[9px]">
+            Scope (Optional)
+            <span title="Choose topics, focus areas, or instructions for this summary; the output remains grounded in the selected document.">
+              <Info className="h-3 w-3 text-slate-500" aria-hidden="true" />
+            </span>
+          </label>
+          <textarea
+            id="summary-scope-instructions"
+            className="field min-h-[70px] w-full resize-y text-[11px]"
+            placeholder="Enter specific topics, focus areas, or instructions..."
+            value={scopeInstructions}
+            maxLength={MAX_SCOPE_LENGTH}
+            onChange={(event) => setScopeInstructions(event.target.value)}
+            rows={3}
+          />
+          <div className="mt-1 flex items-center justify-between gap-2 text-[9px] text-slate-500">
+            <span>Example: financial highlights, key findings, risks, data trends, etc.</span>
+            <span className="shrink-0">{scopeInstructions.length}/{MAX_SCOPE_LENGTH}</span>
+          </div>
+        </div>
+
+
         {
           error
           && (
@@ -333,20 +385,26 @@ export default function Summaries() {
         }
 
 
-        <Button
-          onClick={
-            () =>
-              void run()
-          }
-          loading={loading}
-          disabled={
-            !canGenerate
-          }
-          className="mt-3 h-8 w-full text-[11px]"
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          Generate Summary
-        </Button>
+        <div className="mt-3 flex gap-2.5">
+          <Button
+            onClick={() => void run()}
+            loading={loading}
+            disabled={!canGenerate || loading}
+            className="h-9 min-w-0 flex-1 text-[11px]"
+          >
+            {!loading && <Sparkles className="h-3.5 w-3.5" />}
+            Generate Summary
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={clear}
+            className="h-9 shrink-0 px-3 text-[11px]"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Clear
+          </Button>
+        </div>
 
       </Card>
 
@@ -370,7 +428,7 @@ export default function Summaries() {
                 <Sparkles className="h-8 w-8" />
               }
               title="Summary Area Empty"
-              description="Select 1 document and click Generate Summary to run the existing summarization pipeline."
+              description="Select 1 document, set the summary scope, and click Generate Summary to create the report."
             />
           )
           : (

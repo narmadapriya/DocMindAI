@@ -24,16 +24,23 @@ import { UploadDropzone } from "../components/UploadDropzone";
 import { useDocumentStore } from "../store/documentStore";
 import { formatBytes, formatDate } from "../utils/format";
 
-const PRIMARY_FILTERS = ["ALL", "PDF", "DOCX", "XLSX", "CSV"];
-const MORE_FILTERS = ["TXT"];
+const PRIMARY_FILTERS = ["ALL", "PDF", "DOCX"];
+const MORE_FILTERS = ["XLSX", "CSV", "TXT"];
 
 function documentType(document) {
-  return (
-    document.file_type ||
-    document.filename?.split(".").pop() ||
-    ""
-  )
-    .replace(".", "")
+  const explicit = String(document.file_type || "")
+    .replace(/^\./, "")
+    .trim()
+    .toUpperCase();
+
+  if (["PDF", "DOCX", "XLSX", "CSV", "TXT"].includes(explicit)) {
+    return explicit;
+  }
+
+  // Fallback handles MIME-valued file_type as well as missing types.
+  return String(document.original_filename || document.filename || "")
+    .split(".")
+    .pop()
     .toUpperCase();
 }
 
@@ -178,16 +185,25 @@ export default function Documents() {
               <button
                 type="button"
                 onClick={() => setMoreOpen((value) => !value)}
-                className="rounded-full border border-slate-800 bg-ink-900 px-4 py-2 text-xs font-medium text-slate-400 hover:border-slate-700"
+                aria-expanded={moreOpen}
+                aria-haspopup="menu"
+                aria-label={`More file types${MORE_FILTERS.includes(filter) ? `, ${filter} selected` : ""}`}
+                className={`rounded-full border px-4 py-2 text-xs font-medium hover:border-slate-700 ${
+                  MORE_FILTERS.includes(filter)
+                    ? "border-violet-600 bg-violet-950/45 text-violet-200"
+                    : "border-slate-800 bg-ink-900 text-slate-400"
+                }`}
               >
                 More ▾
               </button>
               {moreOpen && (
-                <div className="absolute right-0 z-30 mt-2 min-w-[120px] rounded-xl border border-slate-800 bg-ink-900 p-1.5 shadow-2xl">
+                <div role="menu" aria-label="Additional file types" className="absolute right-0 z-30 mt-2 min-w-[120px] rounded-xl border border-slate-800 bg-ink-900 p-1.5 shadow-2xl">
                   {MORE_FILTERS.map((item) => (
                     <button
                       key={item}
                       type="button"
+                      role="menuitemradio"
+                      aria-checked={filter === item}
                       onClick={() => {
                         setFilter(item);
                         setMoreOpen(false);

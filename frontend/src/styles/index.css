@@ -2385,3 +2385,25 @@ html.dark .document-card-icon[data-document-type] {
   box-sizing: border-box !important;
 }
 
+
+
+/* Requested icon treatment: only Documents and Chat & Ask source rows.
+   File-type glyph colors are inherited from the frozen type selectors. */
+html.dark .documents-page .document-grid-card .document-card-icon-wrap,
+html.light .documents-page .document-grid-card .document-card-icon-wrap {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+html.dark .documents-page .document-list-icon.document-card-icon,
+html.light .documents-page .document-list-icon.document-card-icon,
+html.dark .documents-page .document-grid-card .document-card-icon,
+html.light .documents-page .document-grid-card .document-card-icon,
+html.dark .chat-source-drawer [data-document-type].document-card-ui > .document-card-icon,
+html.light .chat-source-drawer [data-document-type].document-card-ui > .document-card-icon {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}

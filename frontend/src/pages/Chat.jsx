@@ -34,9 +34,6 @@ import { downloadConversationPdf } from "../utils/pdfExport";
 export default function Chat() {
   const user = useAuthStore((state) => state.user);
   const documents = useDocumentStore((state) => state.documents);
-  const selectedIds = useDocumentStore((state) => state.selectedIds);
-  const selectOne = useDocumentStore((state) => state.selectOne);
-  const clearSelected = useDocumentStore((state) => state.clearSelected);
   const loadDocuments = useDocumentStore((state) => state.load);
 
   const messages = useChatStore((state) => state.messages);
@@ -44,6 +41,14 @@ export default function Chat() {
   const error = useChatStore((state) => state.error);
   const send = useChatStore((state) => state.send);
   const clear = useChatStore((state) => state.clear);
+
+  // Chat source selection is intentionally page-local. Other pages may use
+  // documentStore.selectedIds, but must not preselect a Chat & Ask source.
+  // A fresh page mount (including navigation back to Chat) starts unselected.
+  const [activeDocumentId, setActiveDocumentId] = useState(null);
+  const selectedIds = activeDocumentId == null ? [] : [activeDocumentId];
+  const selectOne = (id) => setActiveDocumentId(id == null || id === "" ? null : id);
+  const clearSelected = () => setActiveDocumentId(null);
 
   const [query, setQuery] = useState("");
   const [citation, setCitation] = useState(null);
@@ -173,7 +178,7 @@ export default function Chat() {
 
         <div className="min-h-0 flex-1 overflow-y-auto px-3 py-5 sm:px-5 lg:px-7 lg:py-7">
           <div className="mx-auto w-full max-w-[840px]">
-            {!messages.length && (
+            {(!active || !messages.length) && (
               <div className="py-10 text-center sm:py-16">
                 <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl border border-violet-800 bg-violet-950/40 text-violet-300">
                   <Bot className="h-5 w-5" />
@@ -187,7 +192,7 @@ export default function Chat() {
               </div>
             )}
 
-            {messages.map((message) => {
+            {active && messages.map((message) => {
               const isUser = message.role === "user";
               const canEdit = isUser && !loading;
 
@@ -255,7 +260,7 @@ export default function Chat() {
               );
             })}
 
-            {loading && (
+            {active && loading && (
               <div className="mr-auto max-w-[88%] rounded-xl border border-slate-800 bg-ink-900 p-4 text-xs text-slate-400">
                 <Sparkles className="mr-2 inline h-4 w-4 animate-pulse text-violet-400" />
                 Retrieving evidence, reasoning, verifying, and generating citations…
