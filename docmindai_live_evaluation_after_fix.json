@@ -1,0 +1,272 @@
+{
+  "created_utc": "2026-10-31T18:56:52.052533+00:00",
+  "baseline": "October 26 frozen + locally installed October 31 comparison/summary agent replacements (verify your working copy)",
+  "method": "authenticated existing backend HTTP APIs; localhost; one warm-up per test by default",
+  "latency_scope": "HTTP request-to-response; excludes browser paint/render and model cold load if warmup used",
+  "metric_limitations": "Automatic checks are expected-fact marker coverage, not measured faithfulness, context precision, or context recall",
+  "runs_per_test": 1,
+  "warmup_per_test": 0,
+  "results": [
+    {
+      "id": "pdf_prices",
+      "module": "chat",
+      "files": [
+        "apex_motors_market_report.pdf"
+      ],
+      "runs": [
+        {
+          "seconds": 0.219,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "apex_price": true,
+              "horizon_price": true,
+              "apex_csat": true,
+              "horizon_csat": true,
+              "price_gap": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "conversation_id": "f97be3cf-8df4-4d07-870e-c70f34b58c07",
+            "answer": "### Answer\n\n**Apex Motors: average transaction price $38,100; customer satisfaction 4.6/5.** [Page 4]\n\nHorizon Motor Co.: average transaction price **$41,500**; customer satisfaction **4.4**/**5**. [Page 4]\n\nAbsolute price difference: **$3,400**. [Page 4]\n\n**Next:** Ask for a comparison, a deeper explanation, or a source-specific breakdown if you want to explore this further.",
+            "citations": [
+              "[Source: apex_motors_market_report.pdf, Page 4]"
+            ],
+            "evidence_count": 5,
+            "document_count": 1,
+            "conversation_context_used": false
+          }
+        }
+      ],
+      "successful_runs": 1,
+      "median_seconds": 0.219,
+      "p95_nearest_rank_seconds": 0.219,
+      "all_successful_under_10s": true
+    },
+    {
+      "id": "docx_quarters",
+      "module": "chat",
+      "files": [
+        "apex_motors_annual_report.docx"
+      ],
+      "runs": [
+        {
+          "status": "failed",
+          "error": "Connection/timeout on /api/v1/chat: timed out"
+        }
+      ],
+      "successful_runs": 0
+    },
+    {
+      "id": "txt_plans",
+      "module": "chat",
+      "files": [
+        "apex_motors.txt"
+      ],
+      "runs": [
+        {
+          "status": "failed",
+          "error": "Connection/timeout on /api/v1/chat: timed out"
+        }
+      ],
+      "successful_runs": 0
+    },
+    {
+      "id": "csv_monthly",
+      "module": "chat",
+      "files": [
+        "apex_motors_monthly_sales_2025.csv"
+      ],
+      "runs": [
+        {
+          "seconds": 43.951,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "ten_month_units": false,
+              "ten_month_revenue": false,
+              "highest_month": false,
+              "oct_revenue": false
+            },
+            "marker_coverage": 0.0,
+            "citations_present": false,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "conversation_id": "4ff36292-3766-48d0-9eb4-82ef761da74b",
+            "answer": "I could not produce a sufficiently verified answer from the retrieved evidence.",
+            "citations": [],
+            "evidence_count": 5,
+            "document_count": 1,
+            "conversation_context_used": false
+          }
+        }
+      ],
+      "successful_runs": 1,
+      "median_seconds": 43.951,
+      "p95_nearest_rank_seconds": 43.951,
+      "all_successful_under_10s": false
+    },
+    {
+      "id": "xlsx_executive",
+      "module": "summary",
+      "files": [
+        "apex_motors_data.xlsx"
+      ],
+      "runs": [
+        {
+          "seconds": 0.167,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "ten_month_units": true,
+              "ten_month_revenue": true,
+              "volt_x_stock": false,
+              "volt_x_production": false,
+              "manufacturing_count": false,
+              "workforce_context": true
+            },
+            "marker_coverage": 0.5,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "summary": "### Executive Summary\n\n**BLUF:** Worksheet 'Sales Data' contains **21** non-empty rows and **5** columns. — FY2025 Sales Data | Headquarters: Austin, Texas | Founded: **2015** | Avg.\n\n#### Executive Findings\n1. **Performance:** Worksheet 'Sales Data' contains **21** non-empty rows and **5** columns.\n2. **Growth:** — FY2025 Sales Data | Headquarters: Austin, Texas | Founded: **2015** | Avg.\n3. **Operations:** Row **9**: Model: Apex Coupe Spark; Body Type: Coupe; Current Stock: **110**; In Production: **90**; Reorder Threshold: **80**; Status: Adequate.\n4. **Challenges:** Row **15**: Month: Total / Avg; Units Sold: **12940**; Avg Price (USD): **37700**; Revenue (USD): **488538000** (**488.538 million** USD).\n5. **Outlook:** Worksheet 'Inventory & Workforce' contains **15** non-empty rows and **6** columns.\n\n#### Data Highlights\n- Worksheet 'Sales Data' contains **21** non-empty rows and **5** columns.\n- — FY2025 Sales Data | Headquarters: Austin, Texas | Founded: **2015** | Avg.\n- Row **9**: Model: Apex Coupe Spark; Body Type: Coupe; Current Stock: **110**; In Production: **90**; Reorder Threshold: **80**; Status: Adequate.\n- Row **15**: Month: Total / Avg; Units Sold: **12940**; Avg Price (USD): **37700**; Revenue (USD): **488538000** (**488.538 million** USD).\n- Worksheet 'Inventory & Workforce' contains **15** non-empty rows and **6** columns.",
+            "citations": [
+              "[Source: apex_motors_data.xlsx]"
+            ],
+            "scope": "executive",
+            "evidence_count": 19,
+            "document_count": 1
+          }
+        }
+      ],
+      "successful_runs": 1,
+      "median_seconds": 0.167,
+      "p95_nearest_rank_seconds": 0.167,
+      "all_successful_under_10s": true
+    },
+    {
+      "id": "pdf_docx_comparison",
+      "module": "compare",
+      "files": [
+        "apex_motors_market_report.pdf",
+        "apex_motors_annual_report.docx"
+      ],
+      "runs": [
+        {
+          "seconds": 2.103,
+          "status": "success",
+          "validation": {
+            "correct_rows": [
+              true,
+              true
+            ],
+            "metric_row_coverage": 1.0,
+            "citations_present": true,
+            "note": "Strict ordered metric check; inspect citations/evidence manually."
+          },
+          "response": {
+            "answer": "| Metric | apex_motors_market_report.pdf | apex_motors_annual_report.docx | Change |\n|---|---|---|---|\n| Apex SUV Trailblazer FY2025 units sold | 5640 | 5640 | 0 |\n| Apex SUV Trailblazer starting price | 41200 | 41200 | 0 |",
+            "comparison": [
+              {
+                "metric": "Apex SUV Trailblazer FY2025 units sold",
+                "document_a": "5640",
+                "document_b": "5640",
+                "change": "0"
+              },
+              {
+                "metric": "Apex SUV Trailblazer starting price",
+                "document_a": "41200",
+                "document_b": "41200",
+                "change": "0"
+              }
+            ],
+            "citations": [
+              "[Source: apex_motors_market_report.pdf, Page 3]",
+              "[Source: apex_motors_annual_report.docx]"
+            ],
+            "document_count": 2
+          }
+        }
+      ],
+      "successful_runs": 1,
+      "median_seconds": 2.103,
+      "p95_nearest_rank_seconds": 2.103,
+      "all_successful_under_10s": true
+    },
+    {
+      "id": "fy25_fy26_comparison",
+      "module": "compare",
+      "files": [
+        "DocMindAI_Comparison_Test_A_FY2025.csv",
+        "DocMindAI_Comparison_Test_B_FY2026.xlsx"
+      ],
+      "runs": [
+        {
+          "seconds": 1.808,
+          "status": "success",
+          "validation": {
+            "correct_rows": [
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "metric_row_coverage": 1.0,
+            "citations_present": true,
+            "note": "Strict ordered metric check; inspect citations/evidence manually."
+          },
+          "response": {
+            "answer": "| Metric | DocMindAI_Comparison_Test_A_FY2025.csv | DocMindAI_Comparison_Test_B_FY2026.xlsx | Change |\n|---|---|---|---|\n| Revenue | 612400000 | 694800000 | +82400000 |\n| Total vehicles sold | 16070 | 17840 | +1770 |\n| Operating margin | 8.4 | 9.1 | +0.7 pp |\n| EV share | 11.5 | 16.2 | +4.7 pp |\n| Regional service centers | 6 | 8 | +2 |",
+            "comparison": [
+              {
+                "metric": "Revenue",
+                "document_a": "612400000",
+                "document_b": "694800000",
+                "change": "+82400000"
+              },
+              {
+                "metric": "Total vehicles sold",
+                "document_a": "16070",
+                "document_b": "17840",
+                "change": "+1770"
+              },
+              {
+                "metric": "Operating margin",
+                "document_a": "8.4",
+                "document_b": "9.1",
+                "change": "+0.7 pp"
+              },
+              {
+                "metric": "EV share",
+                "document_a": "11.5",
+                "document_b": "16.2",
+                "change": "+4.7 pp"
+              },
+              {
+                "metric": "Regional service centers",
+                "document_a": "6",
+                "document_b": "8",
+                "change": "+2"
+              }
+            ],
+            "citations": [
+              "[Source: DocMindAI_Comparison_Test_A_FY2025.csv]",
+              "[Source: DocMindAI_Comparison_Test_B_FY2026.xlsx, Sheet: Comparison Metrics]"
+            ],
+            "document_count": 2
+          }
+        }
+      ],
+      "successful_runs": 1,
+      "median_seconds": 1.808,
+      "p95_nearest_rank_seconds": 1.808,
+      "all_successful_under_10s": true
+    }
+  ]
+}

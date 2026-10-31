@@ -1,0 +1,216 @@
+APEX MOTORS INC.
+FY2025 CONSOLIDATED TEXT REPORT
+
+Prepared from the supplied Apex Motors FY2025 annual report, market and product
+report, monthly sales CSV, and sales/inventory/workforce Excel workbook.
+
+======================================================================
+1. COMPANY PROFILE
+======================================================================
+
+Company: Apex Motors Inc.
+Headquarters: Austin, Texas
+Founded: 2015
+Employees: 1,240
+Reporting period: Fiscal Year 2025, ended December 31, 2025
+
+The annual report was prepared for shareholders and prospective partners and
+summarizes the company's financial, operational, and regional performance.
+The market and product report was prepared by the Apex Motors Strategy &
+Market Research team for internal and partner distribution.
+
+
+======================================================================
+2. FY2025 EXECUTIVE SUMMARY
+======================================================================
+
+Apex Motors closed fiscal year 2025 with $612.4 million in revenue on
+16,070 vehicles sold, marking the company's strongest year since its 2015
+founding.
+
+Growth accelerated each quarter. Q4 contributed $181.1 million in revenue
+and 4,610 units, representing a 34% increase in units compared with Q1.
+
+Performance was driven by:
+- Strong demand for the Apex SUV Trailblazer.
+- Continued expansion in the South region.
+- Steady gains in average transaction price.
+- A product mix shift toward higher-margin SUV and truck models.
+
+Customer satisfaction (CSAT): 4.6 out of 5.
+
+
+======================================================================
+3. FY2025 QUARTERLY FINANCIAL HIGHLIGHTS
+======================================================================
+
+Quarter       Units Sold       Revenue (USD)
+Q1 2025           3,420        $128,500,000
+Q2 2025           3,890        $146,000,000
+Q3 2025           4,150        $156,800,000
+Q4 2025           4,610        $181,100,000
+FY2025 Total      16,070        $612,400,000
+
+
+======================================================================
+4. MONTHLY SALES DATA — JANUARY THROUGH OCTOBER 2025
+======================================================================
+
+Month   Year   Units Sold   Avg Transaction Price (USD)   Revenue (USD)
+Jan     2025        1,050                       $36,800      $38,640,000
+Feb     2025        1,130                       $37,000      $41,810,000
+Mar     2025        1,240                       $37,200      $46,128,000
+Apr     2025        1,260                       $37,400      $47,124,000
+May     2025        1,290                       $37,600      $48,504,000
+Jun     2025        1,340                       $37,800      $50,652,000
+Jul     2025        1,330                       $38,000      $50,540,000
+Aug     2025        1,380                       $38,200      $52,716,000
+Sep     2025        1,440                       $38,400      $55,296,000
+Oct     2025        1,480                       $38,600      $57,128,000
+
+Jan-Oct total units: 12,940
+Jan-Oct total revenue: $488,538,000
+Jan-Oct average transaction price shown in the workbook: $37,700
+
+Note: The supplied monthly CSV covers January through October 2025. The
+quarterly and annual figures above cover the full FY2025 period.
+
+
+======================================================================
+5. REGIONAL PERFORMANCE
+======================================================================
+
+Apex Motors sells through four regional networks: North, South, East, and West.
+The South remained the company's largest market for the third consecutive year
+and accounted for nearly one-third of total FY2025 unit sales.
+
+Region      Units Sold      Share of FY2025 Sales
+North            4,250                     26.4%
+South            5,150                     32.0%
+East             3,180                     19.8%
+West             3,490                     21.7%
+
+The annual report identifies the East as the smallest region by volume and a
+priority for FY2026 expansion. Two new regional service centers are planned.
+
+
+======================================================================
+6. PRODUCT LINEUP AND FY2025 UNIT SALES
+======================================================================
+
+Apex Motors' five-model lineup spans sedan, SUV, pickup truck, electric
+hatchback, and coupe segments.
+
+Model                    Body Type             Starting Price   FY2025 Units
+Apex Sedan LX            Sedan                      $32,500          4,820
+Apex SUV Trailblazer     SUV                        $41,200          5,640
+Apex Truck Workhorse     Pickup Truck               $44,800          2,910
+Apex EV Volt-X           Electric Hatchback         $46,900          1,850
+Apex Coupe Spark         Coupe                      $35,600            850
+
+The Apex SUV Trailblazer was the company's top-selling model in FY2025.
+The Apex EV Volt-X posted the fastest year-over-year growth according to the
+annual report.
+
+
+======================================================================
+7. INVENTORY SNAPSHOT — OCTOBER 31, 2025
+======================================================================
+
+Model                    Current Stock   In Production   Reorder Threshold   Status
+Apex Sedan LX                      640             380                 300   Adequate
+Apex SUV Trailblazer               810             460                 350   Adequate
+Apex Truck Workhorse               390             220                 200   Adequate
+Apex EV Volt-X                     265             310                 150   Adequate
+Apex Coupe Spark                   110              90                  80   Adequate
+
+The market report states that the Apex EV Volt-X and Apex Coupe Spark were
+closest to reorder thresholds relative to the rest of the lineup and notes
+additional Volt-X production capacity planned for FY2026.
+
+
+======================================================================
+8. WORKFORCE
+======================================================================
+
+Apex Motors employed 1,240 people at fiscal year-end 2025. Manufacturing
+remained the largest department, reflecting the company's vertically
+integrated production model at its Austin facility.
+
+Department              Headcount       Share of Workforce
+Manufacturing                   520                  41.94%
+Sales                           410                  33.06%
+Corporate & Admin               170                  13.71%
+R&D                             140                  11.29%
+Total                         1,240                 100.00%
+
+
+======================================================================
+9. MARKET ANALYSIS
+======================================================================
+
+The market report states that the North American light-vehicle market grew at
+a mid-single-digit pace in 2025, while Apex Motors significantly outpaced the
+industry. Over the 2021-2025 period, Apex's sales index nearly doubled, while
+the broader industry's increase was less than half that rate.
+
+Key market drivers identified in the report:
+- Continued consumer shift toward SUVs and crossovers, supporting the
+  Trailblazer.
+- Gradual but accelerating EV adoption, supporting double-digit growth in
+  Volt-X reservations.
+- Regional population growth in the South, reinforcing Apex's largest
+  existing dealer network.
+- Rising average transaction prices industry-wide, consistent with Apex's
+  FY2025 shift toward higher-margin models.
+
+
+======================================================================
+10. COMPETITIVE LANDSCAPE
+======================================================================
+
+Apex Motors competes most directly with Veltrix Auto, Horizon Motor Co., and
+Sterling Drive across the volume segment.
+
+Manufacturer          Avg. Price (USD)   CSAT (out of 5)   EV Share of Sales
+Apex Motors                  $38,100             4.6                11.5%
+Veltrix Auto                 $36,900             4.2                 6.0%
+Horizon Motor Co.            $41,500             4.4                14.0%
+Sterling Drive               $35,200             4.0                 3.5%
+
+The market report notes that Apex's average transaction price was below
+Horizon Motor Co. while Apex maintained the second-highest customer
+satisfaction score in the comparison.
+
+Source identified in the market report:
+Apex Motors Strategy & Market Research, internal competitive benchmarking,
+FY2025.
+
+
+======================================================================
+11. FY2026 OUTLOOK
+======================================================================
+
+Management is targeting 12% unit sales growth for FY2026.
+
+Planned priorities include:
+- A 3,000-unit increase in Apex EV Volt-X production capacity.
+- Opening two new regional service centers.
+- Expansion in the East region.
+- Continued customer-experience investment aimed at moving CSAT from 4.6
+  toward a target of 5.0.
+- Disciplined cost management across manufacturing and supply-chain
+  operations.
+
+
+======================================================================
+12. SOURCE FILES
+======================================================================
+
+1. apex_motors_annual_report(2).docx
+2. apex_motors_data(3).xlsx
+3. apex_motors_market_report(10).pdf
+4. apex_motors_monthly_sales_2025(2).csv
+
+This text file consolidates information contained in the supplied files. It
+does not add external company, market, or financial information.
