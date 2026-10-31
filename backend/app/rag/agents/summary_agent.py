@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List, Sequence
 
 
@@ -288,7 +289,41 @@ class SummaryAgent:
             ) or "").strip()
         except Exception:
             return fallback
-        return self._strip_source_markers(answer) if answer else fallback
+        if not answer:
+            return fallback
+        # A generative scoped summary must never introduce unsupported
+        # large numerical results (for example 129400 for source 12940).
+        # This check uses the selected evidence only; it does not hardcode
+        # any particular uploaded document or its expected values.
+        if not self._scoped_numbers_supported(answer, evidence):
+            return fallback
+        return self._strip_source_markers(answer)
+
+    @staticmethod
+    def _scoped_numbers_supported(answer: str, evidence: Sequence[Dict[str, Any]]) -> bool:
+        numeric = re.compile(
+            r"(?<![\w.])(?P<num>\d[\d,]*(?:\.\d+)?)"
+            r"(?:\s*(?P<unit>million|billion|thousand))?\b", re.I
+        )
+        scales = {"million": Decimal("1000000"),
+                  "billion": Decimal("1000000000"),
+                  "thousand": Decimal("1000")}
+        def values(text: str) -> set[Decimal]:
+            found = set()
+            for match in numeric.finditer(text):
+                try:
+                    base = Decimal(match.group("num").replace(",", ""))
+                except InvalidOperation:
+                    continue
+                found.add(base * scales.get((match.group("unit") or "").lower(), Decimal(1)))
+            return found
+        source = values(" ".join(
+            str(item.get("content") or item.get("text") or "")
+            for item in evidence
+        ))
+        # Small derived counts (e.g. "three priorities") aren't a basis
+        # for rejecting prose. Reject missing substantial numerical facts.
+        return all(value in source for value in values(answer) if abs(value) >= 1000)
 
     # =========================================================
     # FILE SUMMARY: STRICT 200-250 WORDS

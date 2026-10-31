@@ -91,6 +91,12 @@ class ComparisonAgent:
             if str(metric).strip()
         ]
 
+        # The UI permits a natural-language analysis focus, but sends it in
+        # the existing comma-delimited metrics field. Translate only clear
+        # multi-metric questions into grounded metric names; legacy labels
+        # and the API response schema stay unchanged.
+        selected_metrics = self._expand_requested_metrics(selected_metrics)
+
         normalized_document_ids = [
             str(document_id)
             for document_id in (document_ids or [])
@@ -149,6 +155,60 @@ class ComparisonAgent:
                 else self._document_count(evidence)
             ),
         }
+
+    @classmethod
+    def _expand_requested_metrics(cls, metrics: Sequence[str]) -> list[str]:
+        """Split sentence-style requests only when a clear metric list exists.
+
+        This is schema-neutral: the existing API continues receiving a list of
+        strings, and short explicit labels (including custom labels) pass
+        through without rewriting.
+        """
+        expanded: list[str] = []
+        for raw in metrics:
+            text = str(raw or "").strip()
+            lowered = text.lower()
+            if re.match(r"^(?:and\s+)?(?:cite|identify|calculate)\b", lowered) and not re.search(
+                r"revenue|units?|vehicles?|margin|share|centers?|price|sold", lowered
+            ):
+                continue
+            is_question = (
+                len(text.split()) >= 8 and bool(re.search(
+                    r"\b(compare|calculate|identify|what|how|cite|reported|documents?)\b", lowered
+                ))
+            ) or (
+                len(text.split()) >= 5 and bool(re.match(r"^(?:compare|calculate|what|how)\b", lowered))
+            )
+            if not is_question:
+                expanded.append(text)
+                continue
+
+            requested: list[str] = []
+            # Keep product identifiers source-driven: the name comes from
+            # the user's request, not from a list of company/model fixtures.
+            product = re.search(
+                r"\b(?:apex\s+)?(?:suv|sedan|truck|ev|coupe)\s+"
+                r"([\w-]+)\b", text, re.IGNORECASE
+            )
+            if product and ("starting price" in lowered or "units" in lowered or "sales" in lowered):
+                product_name = product.group(0)
+                if "sales" in lowered or "units" in lowered:
+                    requested.append(f"{product_name} units sold")
+                if "starting price" in lowered:
+                    requested.append(f"{product_name} starting price")
+            if not requested:
+                terms = (
+                    (r"\brevenue\b", "Revenue"),
+                    (r"\b(?:total\s+)?vehicles?\s+sold\b|\bunits?\s+sold\b", "Units Sold"),
+                    (r"\boperating\s+margin\b", "Operating Margin"),
+                    (r"\bev\s+share\b", "EV Share"),
+                    (r"\b(?:regional\s+)?service\s+centers?\b", "Regional Service Centers"),
+                )
+                requested = [label for pattern, label in terms if re.search(pattern, lowered)]
+            if not requested and re.match(r"^(?:and\s+)?(?:cite|identify|calculate)\b", lowered):
+                continue
+            expanded.extend(requested or [text])
+        return list(dict.fromkeys(x for x in expanded if x))
 
     # =========================================================
     # PHASE-15 FAST ALIGNED COMPARISON
@@ -231,6 +291,12 @@ class ComparisonAgent:
                 first_candidate,
                 second_candidate,
             )
+            # Source-percent metrics change in percentage points, not a
+            # percentage of a percentage. Relative percent change remains
+            # computable separately by the existing frontend.
+            if (change != "N/A" and change != "0" and
+                    re.search(r"\b(?:margin|share)\b", metric, re.I)):
+                change += " pp"
 
             rows.append(
                 {
@@ -279,6 +345,16 @@ class ComparisonAgent:
                 continue
 
             candidates.extend(
+                cls._vertical_metric_candidates(
+                    item=item, content=content, metric=metric,
+                )
+            )
+            candidates.extend(
+                cls._product_metric_candidates(
+                    item=item, content=content, metric=metric,
+                )
+            )
+            candidates.extend(
                 cls._row_serialization_candidates(
                     item=item,
                     content=content,
@@ -305,7 +381,113 @@ class ComparisonAgent:
                 )
             )
 
+        # Model-specific requests must never silently receive a company
+        # total or an unrelated row value with a higher generic score.
+        product_candidates = [c for c in candidates if c.get("origin") in {
+            "product-row", "product-catalog"}]
+        # A model-specific question cannot fall back to a company total when
+        # that model is missing from one source: return N/A instead.
+        product_request = bool(re.search(
+            r"\b(?:suv|sedan|truck|ev|coupe)\s+[a-z0-9-]+",
+            str(metric), re.IGNORECASE,
+        )) and bool(re.search(r"\b(?:units sold|starting price)\b",str(metric),re.I))
+        if product_request:
+            return cls._dedupe_candidates(product_candidates)
         return cls._dedupe_candidates(candidates)
+
+    @classmethod
+    def _vertical_metric_candidates(
+        cls, *, item: Dict[str, Any], content: str, metric: str,
+    ) -> list[Dict[str, Any]]:
+        """Read the Metric/Value/Unit/Period rows emitted by CSV/XLSX parsers.
+
+        Do not mistake a region-specific count for a company total, or use
+        unrelated numeric fields when a requested metric is missing.
+        """
+        output = []
+        kind = cls._metric_kind(metric)
+        aliases = [cls._normalize_label(x) for x in cls._metric_aliases(metric, kind)]
+        for match in re.finditer(
+            r"\bRow\s+\d+\s*:\s*(.*?)(?=(?:\|\s*)?Row\s+\d+\s*:|$)",
+            str(content), re.IGNORECASE | re.DOTALL,
+        ):
+            fields = {}
+            for part in re.split(r"\s*;\s*", match.group(1).strip(" |")):
+                pair = re.match(r"\s*([^:|]+?)\s*:\s*(.+?)\s*$", part)
+                if pair:
+                    fields[cls._normalize_label(pair.group(1))] = pair.group(2).strip().strip("|")
+            label = cls._normalize_label(fields.get("metric", ""))
+            if not label or not fields.get("value"):
+                continue
+            if label not in aliases:
+                continue
+            parsed = cls._parse_number_with_scale(fields["value"])
+            if not parsed:
+                continue
+            period = re.search(r"\bFY\s*(20\d{2})\b", fields.get("period", ""), re.I)
+            scope = f"annual:{period.group(1)}" if period else "generic"
+            output.append(cls._candidate(
+                parsed=parsed, scope=scope, rank=350, evidence=item,
+                origin="metric-value-record", label=fields["metric"],
+            ))
+        return output
+
+    @classmethod
+    def _product_metric_candidates(
+        cls, *, item: Dict[str, Any], content: str, metric: str,
+    ) -> list[Dict[str, Any]]:
+        """Match a model's price/units from indexed DOCX rows or PDF catalog.
+
+        The model name must appear in the user metric and source record; no
+        fixed model names or expected values are embedded here.
+        """
+        normalized = cls._normalize_label(metric)
+        value_type = (
+            "starting price" if "starting price" in normalized else
+            "units" if "units sold" in normalized else None
+        )
+        if value_type is None:
+            return []
+        ignore = {"apex", "suv", "ev", "sedan", "truck", "coupe", "fy2025", "fy2026",
+                  "units", "sold", "starting", "price", "model", "vehicle", "sales"}
+        identifiers = [token for token in normalized.split() if token not in ignore]
+        if not identifiers:
+            return []
+        out = []
+        # Indexed table rows: Model: ..., Starting Price: ..., FY2025 Units: ...
+        for match in re.finditer(
+            r"\bRow\s+\d+\s*:\s*(.*?)(?=(?:\|\s*)?Row\s+\d+\s*:|$)",
+            content, re.I | re.S,
+        ):
+            fields = {}
+            for part in re.split(r"\s*;\s*", match.group(1).strip(" |")):
+                pair = re.match(r"\s*([^:|]+?)\s*:\s*(.+?)\s*$", part)
+                if pair:
+                    fields[cls._normalize_label(pair.group(1))] = pair.group(2).strip(" |")
+            model = cls._normalize_label(fields.get("model", ""))
+            if not model or not all(t in model.split() for t in identifiers):
+                continue
+            key = "starting price" if value_type == "starting price" else "fy2025 units"
+            value = fields.get(key) or (fields.get("units sold") if value_type == "units" else None)
+            if value:
+                parsed = cls._parse_number_with_scale(value)
+                if parsed:
+                    out.append(cls._candidate(parsed=parsed, scope="model:"+model,
+                        rank=340, evidence=item, origin="product-row", label=key))
+        # PDF catalog: model line, body type, Starting at price, FY units sold.
+        pattern = (
+            r"(?m)^([^\n]{3,80})\n(?:SUV|Sedan|Pickup Truck|Electric Hatchback|Coupe)\n"
+            r"Starting at\s+([$€£₹]?[\d,]+)\nFY\s*\d{4}\s+units\s+sold:\s*([\d,]+)"
+        )
+        for match in re.finditer(pattern, content, re.I):
+            model = cls._normalize_label(match.group(1))
+            if not all(t in model.split() for t in identifiers):
+                continue
+            parsed = cls._parse_number_with_scale(match.group(2 if value_type == "starting price" else 3))
+            if parsed:
+                out.append(cls._candidate(parsed=parsed, scope="model:"+model,
+                    rank=340, evidence=item, origin="product-catalog", label=value_type))
+        return out
 
     @classmethod
     def _row_serialization_candidates(
@@ -792,6 +974,7 @@ class ComparisonAgent:
         if (
             "unit sold" in normalized
             or "units sold" in normalized
+            or "vehicles sold" in normalized
             or normalized in {"sales units", "vehicle sales", "vehicle deliveries", "deliveries"}
         ):
             return "units_sold"
@@ -808,7 +991,7 @@ class ComparisonAgent:
         if kind == "revenue":
             return ["revenue", "revenue usd"]
         if kind == "units_sold":
-            return ["units sold", "unit sales", "fy2025 units", "fy2025 units sold", "vehicle deliveries"]
+            return ["units sold", "unit sales", "total vehicles sold", "vehicles sold", "fy2025 units", "fy2025 units sold", "vehicle deliveries"]
         if kind == "employees":
             return ["employees", "headcount", "workforce"]
         if kind == "profit":
@@ -915,7 +1098,10 @@ class ComparisonAgent:
         first_scope = str(first.get("scope") or "generic")
         second_scope = str(second.get("scope") or "generic")
         if first_scope != second_scope and first_scope != "generic" and second_scope != "generic":
-            return "N/A"
+            # Comparing two annual periods is an intentional FY-over-FY
+            # operation. Keep other mismatched scopes non-comparable.
+            if not (first_scope.startswith("annual:") and second_scope.startswith("annual:")):
+                return "N/A"
 
         first_scale = Decimal(str(first.get("scale", 1)))
         second_scale = Decimal(str(second.get("scale", 1)))
