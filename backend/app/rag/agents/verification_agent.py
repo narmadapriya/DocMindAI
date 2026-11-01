@@ -314,6 +314,27 @@ class VerificationAgent:
         evidence_numbers = set(
             evidence_number_list
         )
+        # Verify complete CSV period totals by adding only arithmetic results
+        # reproducible from *all* retrieved monthly rows in the requested range.
+        # This is not a relaxation for arbitrary LLM numbers or partial tables.
+        q_lower = str(query or "").lower()
+        if (
+            "csv" in all_source_kinds
+            and "total" in q_lower
+            and ("calculate" in q_lower or "sum" in q_lower)
+            and any(word in q_lower for word in ("month", "january", "jan"))
+        ):
+            first_month, last_month = self._query_month_range(query)
+            if first_month is not None and last_month is not None and first_month <= last_month:
+                rows = self._extract_sales_rows(structured_source_text)
+                months = {int(row["month"]): row for row in rows
+                          if first_month <= int(row["month"]) <= last_month}
+                if len(months) == last_month - first_month + 1:
+                    for field in ("units", "revenue"):
+                        value = sum((row[field] for row in months.values()), Decimal(0))
+                        numeric = self._normalize_decimal(value)
+                        evidence_number_list.append(numeric)
+                        evidence_numbers.add(numeric)
 
         if visual_grounding_ok:
             # The cited image/chart itself is the source of numeric truth.
@@ -1924,7 +1945,18 @@ class VerificationAgent:
             else min(rows, key=lambda row: row["revenue"])
         )
 
-        answer_month = cls._month_from_text(answer)
+        # Prefer the month explicitly labeled as the extremum. A response
+        # may also mention the requested range (e.g. January–October),
+        # whose first month must not be mistaken for the highest month.
+        labeled = re.search(
+            r"(?:highest|lowest|maximum|minimum|largest|smallest)"
+            r"(?:[\s-]+revenue)?[\s-]+month\s*:\s*([A-Za-z]+)",
+            str(answer or ""), re.I,
+        )
+        answer_month = (
+            cls._month_number(labeled.group(1)) if labeled
+            else cls._month_from_text(answer)
+        )
         if answer_month != target["month"]:
             return False
 

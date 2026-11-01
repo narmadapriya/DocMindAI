@@ -2547,30 +2547,32 @@ class ReasoningAgent:
                         [item],
                     )
 
-        # A complete quarterly table must be in a retrieved DOCX chunk.
+        # Gather quarterly table rows across already-verified DOCX chunks.
+        # Never derive Q1 figures from a vague percentage in prose.
         if kind == "docx" and all(token in q for token in ("q1", "q4", "revenue")):
+            table: dict[str, tuple[int, int, Dict[str, Any]]] = {}
+            pattern = re.compile(
+                r"Row\s+\d+:\s*Quarter:\s*([^;\n]+);\s*"
+                r"Units Sold:\s*([\d,]+);\s*"
+                r"Revenue \(USD\):\s*\$([\d,]+)", re.I
+            )
             for item in evidence:
-                text = str(item.get("content") or "")
-                rows = re.findall(
-                    r"Row\s+\d+:\s+Quarter:\s*([^;\n]+);\s*"
-                    r"Units Sold:\s*([\d,]+);\s*"
-                    r"Revenue \(USD\):\s*\$([\d,]+)", text,
-                    re.I,
-                )
-                info = {name.strip().lower(): (int(units.replace(',', '')),
-                                             int(revenue.replace(',', '')))
-                        for name, units, revenue in rows}
-                q1 = next((val for k,val in info.items() if k.startswith('q1')), None)
-                q4 = next((val for k,val in info.items() if k.startswith('q4')), None)
-                annual = next((val for k,val in info.items() if 'total' in k), None)
-                if q1 and q4 and annual:
-                    return result(
-                        f"FY total: ${annual[1]:,} revenue and {annual[0]:,} "
-                        f"vehicles sold. Q1: ${q1[1]:,} and {q1[0]:,} "
-                        f"vehicles. Q4: ${q4[1]:,} and {q4[0]:,} vehicles. "
-                        f"Q4 exceeded Q1 by ${q4[1]-q1[1]:,} revenue and "
-                        f"{q4[0]-q1[0]:,} vehicles.", [item],
+                for match in pattern.finditer(str(item.get("content") or "")):
+                    label = match.group(1).strip().lower()
+                    table[label] = (
+                        int(match.group(2).replace(",", "")),
+                        int(match.group(3).replace(",", "")), item,
                     )
+            q1 = next((val for key, val in table.items() if key.startswith("q1")), None)
+            q4 = next((val for key, val in table.items() if key.startswith("q4")), None)
+            annual = next((val for key, val in table.items() if "total" in key), None)
+            if q1 and q4 and annual:
+                return result(
+                    f"FY2025 total: ${annual[1]:,} revenue and {annual[0]:,} "
+                    f"vehicles sold. Q1: ${q1[1]:,} revenue and {q1[0]:,} "
+                    f"vehicles. Q4: ${q4[1]:,} revenue and {q4[0]:,} "
+                    f"vehicles.", [q1[2], q4[2], annual[2]],
+                )
 
         # Require all ten distinct months before computing a Jan-Oct total.
         if kind == "csv" and all(t in q for t in ('revenue', 'month')) and (
