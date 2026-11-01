@@ -102,6 +102,36 @@ class SummaryService:
                 title=section or "",
             )
 
+        # When the summary agent has already returned five complete, grounded
+        # executive findings for a user-defined scope, preserve those findings.
+        # The generic executive formatter instead re-selects unrelated worksheet
+        # headings from evidence, losing the scoped facts. This branch changes
+        # presentation only; unscoped/other summaries keep the frozen formatter.
+        if instructions and normalized_scope == "executive":
+            structured_builder = getattr(
+                self.summary_agent, "_structured_executive_focus", None
+            )
+            # Only preserve the verified, fully parsed structured result.
+            # Generic/fallback five-line summaries must keep existing formatting.
+            source_grounded = (
+                structured_builder(focused_evidence, instructions)
+                if callable(structured_builder) else None
+            )
+            if (
+                source_grounded
+                and str(result.get("summary", "")).strip() == str(source_grounded).strip()
+            ):
+                scoped_display = self._present_complete_scoped_executive(
+                    str(source_grounded)
+                )
+                if scoped_display is not None:
+                    output = dict(result)
+                    output["summary"] = scoped_display
+                    output["citations"] = self._document_level_summary_citations(
+                        evidence=focused_evidence
+                    )
+                    return output
+
         # Presentation-only Phase-15 hardening. Retrieval, evidence selection,
         # summarization logic, API schemas, authentication, and persistence are
         # unchanged. The existing grounded summary text is only reorganized
@@ -111,6 +141,40 @@ class SummaryService:
             evidence=focused_evidence,
             scope=normalized_scope,
         )
+
+    @classmethod
+    def _present_complete_scoped_executive(cls, summary: str) -> str | None:
+        """Display five already-generated findings without replacing their facts.
+
+        Activates only for the exact five-line grounded format returned by the
+        scoped executive agent. Any other text uses the existing formatter.
+        """
+        labels = (
+            "Main Result",
+            "Key Metric / Finding",
+            "Major Insight",
+            "Risk / Opportunity",
+            "Final Takeaway",
+        )
+        lines = [line.strip() for line in str(summary).splitlines() if line.strip()]
+        if len(lines) != len(labels):
+            return None
+        findings: list[str] = []
+        for line, label in zip(lines, labels):
+            match = re.fullmatch(re.escape(label) + r":\s*(.+)", line, re.I)
+            if not match:
+                return None
+            value = cls._strip_source_markers(match.group(1)).strip()
+            if not value:
+                return None
+            findings.append(cls._bold_summary_metrics(value))
+        return "\n".join([
+            "### Executive Summary", "",
+            f"**BLUF:** {findings[0]}", "",
+            "#### Executive Findings",
+            *(f"{i}. **{label}:** {value}"
+              for i, (label, value) in enumerate(zip(labels, findings), 1)),
+        ])
 
     # =========================================================
     # SUMMARY PRESENTATION (PRESENTATION ONLY)
