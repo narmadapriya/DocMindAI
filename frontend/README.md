@@ -44,5 +44,4 @@ npm run test
 npm run build
 npm run dev
 ```
-
 Vite proxies `/api` to `http://127.0.0.1:8000`.
