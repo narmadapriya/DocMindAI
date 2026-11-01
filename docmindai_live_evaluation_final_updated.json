@@ -1,0 +1,776 @@
+{
+  "created_utc": "2026-11-01T15:32:08.934828+00:00",
+  "baseline": "October 26 frozen + locally installed October 31 comparison/summary agent replacements (verify your working copy)",
+  "method": "authenticated existing backend HTTP APIs; localhost; one warm-up per test by default",
+  "latency_scope": "HTTP request-to-response; excludes browser paint/render and model cold load if warmup used",
+  "metric_limitations": "Automatic checks are expected-fact marker coverage, not measured faithfulness, context precision, or context recall",
+  "runs_per_test": 3,
+  "warmup_per_test": 1,
+  "results": [
+    {
+      "id": "pdf_prices",
+      "module": "chat",
+      "files": [
+        "apex_motors_market_report.pdf"
+      ],
+      "runs": [
+        {
+          "seconds": 0.243,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "apex_price": true,
+              "horizon_price": true,
+              "apex_csat": true,
+              "horizon_csat": true,
+              "price_gap": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "conversation_id": "2364c4b2-ca7a-4fdc-8857-8a98353d9a2a",
+            "answer": "### Answer\n\n**Apex Motors: average transaction price $38,100; customer satisfaction 4.6/5.** [Page 4]\n\nHorizon Motor Co.: average transaction price **$41,500**; customer satisfaction **4.4**/**5**. [Page 4]\n\nAbsolute price difference: **$3,400**. [Page 4]\n\n**Next:** Ask for a comparison, a deeper explanation, or a source-specific breakdown if you want to explore this further.",
+            "citations": [
+              "[Source: apex_motors_market_report.pdf, Page 4]"
+            ],
+            "evidence_count": 5,
+            "document_count": 1,
+            "conversation_context_used": false
+          }
+        },
+        {
+          "seconds": 0.095,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "apex_price": true,
+              "horizon_price": true,
+              "apex_csat": true,
+              "horizon_csat": true,
+              "price_gap": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "conversation_id": "ff806c9a-151f-4a33-b7c4-7192af23bb4a",
+            "answer": "### Answer\n\n**Apex Motors: average transaction price $38,100; customer satisfaction 4.6/5.** [Page 4]\n\nHorizon Motor Co.: average transaction price **$41,500**; customer satisfaction **4.4**/**5**. [Page 4]\n\nAbsolute price difference: **$3,400**. [Page 4]\n\n**Next:** Ask for a comparison, a deeper explanation, or a source-specific breakdown if you want to explore this further.",
+            "citations": [
+              "[Source: apex_motors_market_report.pdf, Page 4]"
+            ],
+            "evidence_count": 5,
+            "document_count": 1,
+            "conversation_context_used": false
+          }
+        },
+        {
+          "seconds": 0.123,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "apex_price": true,
+              "horizon_price": true,
+              "apex_csat": true,
+              "horizon_csat": true,
+              "price_gap": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "conversation_id": "752989fd-757f-4121-95cd-278e010952da",
+            "answer": "### Answer\n\n**Apex Motors: average transaction price $38,100; customer satisfaction 4.6/5.** [Page 4]\n\nHorizon Motor Co.: average transaction price **$41,500**; customer satisfaction **4.4**/**5**. [Page 4]\n\nAbsolute price difference: **$3,400**. [Page 4]\n\n**Next:** Ask for a comparison, a deeper explanation, or a source-specific breakdown if you want to explore this further.",
+            "citations": [
+              "[Source: apex_motors_market_report.pdf, Page 4]"
+            ],
+            "evidence_count": 5,
+            "document_count": 1,
+            "conversation_context_used": false
+          }
+        }
+      ],
+      "successful_runs": 3,
+      "median_seconds": 0.123,
+      "p95_nearest_rank_seconds": 0.243,
+      "all_successful_under_10s": true
+    },
+    {
+      "id": "docx_quarters",
+      "module": "chat",
+      "files": [
+        "apex_motors_annual_report.docx"
+      ],
+      "runs": [
+        {
+          "seconds": 138.604,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "fy_revenue": true,
+              "fy_units": true,
+              "q1_revenue": true,
+              "q1_units": true,
+              "q4_revenue": true,
+              "q4_units": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "conversation_id": "151f510b-43e3-4fe8-8029-71f6d2191c0e",
+            "answer": "### Answer\n\n**Apex Motors' total FY2025 revenue was $612.4 million, and they sold 16,070 vehicles.** [Table docx-table1]\n\n#### Key Points\n- Q4 performance was **$181.1 million** in revenue and **4,610 units** sold, a **34%** increase over Q1's **$128.5 million** in revenue and **3,420 units** sold. [Table docx-table1]\n\n**Next:** Ask for a comparison, a deeper explanation, or a source-specific breakdown if you want to explore this further.",
+            "citations": [
+              "[Source: apex_motors_annual_report.docx]",
+              "[Source: apex_motors_annual_report.docx, uploads\\parsed_assets\\d19379c118d743e2add81aa411b43e01_apex_motors_annual_report\\58a4451deb7578a92c2886bfd6fd414951a5bef5.png]",
+              "[Source: apex_motors_annual_report.docx, uploads\\parsed_assets\\d19379c118d743e2add81aa411b43e01_apex_motors_annual_report\\80bd6806670ab7d2fd6f106fef7d28ce54b2d13f.png]",
+              "[Source: apex_motors_annual_report.docx, Table docx-table1]"
+            ],
+            "evidence_count": 10,
+            "document_count": 1,
+            "conversation_context_used": false
+          }
+        },
+        {
+          "seconds": 14.229,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "fy_revenue": true,
+              "fy_units": true,
+              "q1_revenue": true,
+              "q1_units": true,
+              "q4_revenue": true,
+              "q4_units": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "conversation_id": "5d991f8e-1318-41b2-a38b-04b508c9493f",
+            "answer": "### Answer\n\n**Apex Motors' total FY2025 revenue was $612.4 million, and they sold 16,070 vehicles.** [Table docx-table1]\n\n#### Key Points\n- Q4 performance was **$181.1 million** in revenue and **4,610 units** sold, a **34%** increase over Q1's **$128.5 million** in revenue and **3,420 units** sold. [Table docx-table1]\n\n**Next:** Ask for a comparison, a deeper explanation, or a source-specific breakdown if you want to explore this further.",
+            "citations": [
+              "[Source: apex_motors_annual_report.docx]",
+              "[Source: apex_motors_annual_report.docx, uploads\\parsed_assets\\d19379c118d743e2add81aa411b43e01_apex_motors_annual_report\\58a4451deb7578a92c2886bfd6fd414951a5bef5.png]",
+              "[Source: apex_motors_annual_report.docx, uploads\\parsed_assets\\d19379c118d743e2add81aa411b43e01_apex_motors_annual_report\\80bd6806670ab7d2fd6f106fef7d28ce54b2d13f.png]",
+              "[Source: apex_motors_annual_report.docx, Table docx-table1]"
+            ],
+            "evidence_count": 10,
+            "document_count": 1,
+            "conversation_context_used": false
+          }
+        },
+        {
+          "seconds": 0.141,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "fy_revenue": true,
+              "fy_units": true,
+              "q1_revenue": true,
+              "q1_units": true,
+              "q4_revenue": true,
+              "q4_units": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "conversation_id": "23cf2f1b-9260-4988-80bf-287925517c6d",
+            "answer": "### Answer\n\n**Apex Motors' total FY2025 revenue was $612.4 million, and they sold 16,070 vehicles.** [Table docx-table1]\n\n#### Key Points\n- Q4 performance was **$181.1 million** in revenue and **4,610 units** sold, a **34%** increase over Q1's **$128.5 million** in revenue and **3,420 units** sold. [Table docx-table1]\n\n**Next:** Ask for a comparison, a deeper explanation, or a source-specific breakdown if you want to explore this further.",
+            "citations": [
+              "[Source: apex_motors_annual_report.docx]",
+              "[Source: apex_motors_annual_report.docx, uploads\\parsed_assets\\d19379c118d743e2add81aa411b43e01_apex_motors_annual_report\\58a4451deb7578a92c2886bfd6fd414951a5bef5.png]",
+              "[Source: apex_motors_annual_report.docx, uploads\\parsed_assets\\d19379c118d743e2add81aa411b43e01_apex_motors_annual_report\\80bd6806670ab7d2fd6f106fef7d28ce54b2d13f.png]",
+              "[Source: apex_motors_annual_report.docx, Table docx-table1]"
+            ],
+            "evidence_count": 10,
+            "document_count": 1,
+            "conversation_context_used": false
+          }
+        }
+      ],
+      "successful_runs": 3,
+      "median_seconds": 14.229,
+      "p95_nearest_rank_seconds": 138.604,
+      "all_successful_under_10s": false
+    },
+    {
+      "id": "txt_plans",
+      "module": "chat",
+      "files": [
+        "apex_motors.txt"
+      ],
+      "runs": [
+        {
+          "seconds": 0.123,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "sales_growth_target": true,
+              "volt_x_capacity": true,
+              "service_centers": true,
+              "east_expansion": true,
+              "customer_target": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "conversation_id": "6ee61b5e-5093-4bd0-9a0f-081a3d556f8f",
+            "answer": "### Answer\n\n**Management is targeting 12% unit sales growth for FY2026.** [apex_motors.txt]\n\n#### Key Points\n- A **3,000**-unit increase in Apex EV Volt-X production capacity. [apex_motors.txt]\n- Opening two new regional service centers. [apex_motors.txt]\n- Expansion in the East region. [apex_motors.txt]\n- Continued customer-experience investment aimed at moving CSAT from **4.6** toward a target of **5.0**. [apex_motors.txt]\n\n**Next:** Ask for a comparison, a deeper explanation, or a source-specific breakdown if you want to explore this further.",
+            "citations": [
+              "[Source: apex_motors.txt]"
+            ],
+            "evidence_count": 10,
+            "document_count": 1,
+            "conversation_context_used": false
+          }
+        },
+        {
+          "seconds": 0.103,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "sales_growth_target": true,
+              "volt_x_capacity": true,
+              "service_centers": true,
+              "east_expansion": true,
+              "customer_target": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "conversation_id": "12c73ab4-abfa-4c8e-a527-e93f6aeefb9d",
+            "answer": "### Answer\n\n**Management is targeting 12% unit sales growth for FY2026.** [apex_motors.txt]\n\n#### Key Points\n- A **3,000**-unit increase in Apex EV Volt-X production capacity. [apex_motors.txt]\n- Opening two new regional service centers. [apex_motors.txt]\n- Expansion in the East region. [apex_motors.txt]\n- Continued customer-experience investment aimed at moving CSAT from **4.6** toward a target of **5.0**. [apex_motors.txt]\n\n**Next:** Ask for a comparison, a deeper explanation, or a source-specific breakdown if you want to explore this further.",
+            "citations": [
+              "[Source: apex_motors.txt]"
+            ],
+            "evidence_count": 10,
+            "document_count": 1,
+            "conversation_context_used": false
+          }
+        },
+        {
+          "seconds": 0.121,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "sales_growth_target": true,
+              "volt_x_capacity": true,
+              "service_centers": true,
+              "east_expansion": true,
+              "customer_target": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "conversation_id": "de6e8aae-024a-467e-82e0-aba55119345d",
+            "answer": "### Answer\n\n**Management is targeting 12% unit sales growth for FY2026.** [apex_motors.txt]\n\n#### Key Points\n- A **3,000**-unit increase in Apex EV Volt-X production capacity. [apex_motors.txt]\n- Opening two new regional service centers. [apex_motors.txt]\n- Expansion in the East region. [apex_motors.txt]\n- Continued customer-experience investment aimed at moving CSAT from **4.6** toward a target of **5.0**. [apex_motors.txt]\n\n**Next:** Ask for a comparison, a deeper explanation, or a source-specific breakdown if you want to explore this further.",
+            "citations": [
+              "[Source: apex_motors.txt]"
+            ],
+            "evidence_count": 10,
+            "document_count": 1,
+            "conversation_context_used": false
+          }
+        }
+      ],
+      "successful_runs": 3,
+      "median_seconds": 0.121,
+      "p95_nearest_rank_seconds": 0.123,
+      "all_successful_under_10s": true
+    },
+    {
+      "id": "csv_monthly",
+      "module": "chat",
+      "files": [
+        "apex_motors_monthly_sales_2025.csv"
+      ],
+      "runs": [
+        {
+          "seconds": 0.197,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "ten_month_units": true,
+              "ten_month_revenue": true,
+              "highest_month": true,
+              "oct_revenue": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "conversation_id": "d8fb6d43-0977-4caa-9328-d3eaf4102ba0",
+            "answer": "### Answer\n\n**January–October: 12,940 vehicles sold and $488,538,000 revenue.** [apex_motors_monthly_sales_2025.csv]\n\nHighest-revenue month: Oct, **$57,128,000**. [apex_motors_monthly_sales_2025.csv]\n\n**Next:** Ask for a comparison, a deeper explanation, or a source-specific breakdown if you want to explore this further.",
+            "citations": [
+              "[Source: apex_motors_monthly_sales_2025.csv]"
+            ],
+            "evidence_count": 5,
+            "document_count": 1,
+            "conversation_context_used": false
+          }
+        },
+        {
+          "seconds": 0.234,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "ten_month_units": true,
+              "ten_month_revenue": true,
+              "highest_month": true,
+              "oct_revenue": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "conversation_id": "78152876-71c2-47eb-abc4-497a390591ce",
+            "answer": "### Answer\n\n**January–October: 12,940 vehicles sold and $488,538,000 revenue.** [apex_motors_monthly_sales_2025.csv]\n\nHighest-revenue month: Oct, **$57,128,000**. [apex_motors_monthly_sales_2025.csv]\n\n**Next:** Ask for a comparison, a deeper explanation, or a source-specific breakdown if you want to explore this further.",
+            "citations": [
+              "[Source: apex_motors_monthly_sales_2025.csv]"
+            ],
+            "evidence_count": 5,
+            "document_count": 1,
+            "conversation_context_used": false
+          }
+        },
+        {
+          "seconds": 0.154,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "ten_month_units": true,
+              "ten_month_revenue": true,
+              "highest_month": true,
+              "oct_revenue": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "conversation_id": "3f8257f6-d7fd-405d-8c54-36a4fde30e79",
+            "answer": "### Answer\n\n**January–October: 12,940 vehicles sold and $488,538,000 revenue.** [apex_motors_monthly_sales_2025.csv]\n\nHighest-revenue month: Oct, **$57,128,000**. [apex_motors_monthly_sales_2025.csv]\n\n**Next:** Ask for a comparison, a deeper explanation, or a source-specific breakdown if you want to explore this further.",
+            "citations": [
+              "[Source: apex_motors_monthly_sales_2025.csv]"
+            ],
+            "evidence_count": 5,
+            "document_count": 1,
+            "conversation_context_used": false
+          }
+        }
+      ],
+      "successful_runs": 3,
+      "median_seconds": 0.197,
+      "p95_nearest_rank_seconds": 0.234,
+      "all_successful_under_10s": true
+    },
+    {
+      "id": "xlsx_executive",
+      "module": "summary",
+      "files": [
+        "apex_motors_data.xlsx"
+      ],
+      "runs": [
+        {
+          "seconds": 0.087,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "ten_month_units": true,
+              "ten_month_revenue": true,
+              "volt_x_stock": true,
+              "volt_x_production": true,
+              "manufacturing_count": true,
+              "workforce_context": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "summary": "### Executive Summary\n\n**BLUF:** The reporting period records **12,940** vehicles and **$488,538,000** in revenue.\n\n#### Executive Findings\n1. **Main Result:** The reporting period records **12,940** vehicles and **$488,538,000** in revenue.\n2. **Key Metric / Finding:** The highest-revenue listed month was Oct (October), with **$57,128,000** revenue.\n3. **Major Insight:** The separate full-year total is **16,070** vehicles and **$612,400,000** in revenue; do not confuse this with the shorter reporting period.\n4. **Risk / Opportunity:** Inventory for Apex EV Volt-X: current stock **265,** in production **310,** reorder threshold **150** (reported status: Adequate).\n5. **Final Takeaway:** Manufacturing has the largest reported department workforce at **520** people.",
+            "citations": [
+              "[Source: apex_motors_data.xlsx]"
+            ],
+            "scope": "executive",
+            "evidence_count": 19,
+            "document_count": 1
+          }
+        },
+        {
+          "seconds": 0.099,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "ten_month_units": true,
+              "ten_month_revenue": true,
+              "volt_x_stock": true,
+              "volt_x_production": true,
+              "manufacturing_count": true,
+              "workforce_context": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "summary": "### Executive Summary\n\n**BLUF:** The reporting period records **12,940** vehicles and **$488,538,000** in revenue.\n\n#### Executive Findings\n1. **Main Result:** The reporting period records **12,940** vehicles and **$488,538,000** in revenue.\n2. **Key Metric / Finding:** The highest-revenue listed month was Oct (October), with **$57,128,000** revenue.\n3. **Major Insight:** The separate full-year total is **16,070** vehicles and **$612,400,000** in revenue; do not confuse this with the shorter reporting period.\n4. **Risk / Opportunity:** Inventory for Apex EV Volt-X: current stock **265,** in production **310,** reorder threshold **150** (reported status: Adequate).\n5. **Final Takeaway:** Manufacturing has the largest reported department workforce at **520** people.",
+            "citations": [
+              "[Source: apex_motors_data.xlsx]"
+            ],
+            "scope": "executive",
+            "evidence_count": 19,
+            "document_count": 1
+          }
+        },
+        {
+          "seconds": 0.103,
+          "status": "success",
+          "validation": {
+            "covered_markers": {
+              "ten_month_units": true,
+              "ten_month_revenue": true,
+              "volt_x_stock": true,
+              "volt_x_production": true,
+              "manufacturing_count": true,
+              "workforce_context": true
+            },
+            "marker_coverage": 1.0,
+            "citations_present": true,
+            "note": "Lexical factual-marker coverage only; NOT faithfulness/context-precision proof."
+          },
+          "response": {
+            "summary": "### Executive Summary\n\n**BLUF:** The reporting period records **12,940** vehicles and **$488,538,000** in revenue.\n\n#### Executive Findings\n1. **Main Result:** The reporting period records **12,940** vehicles and **$488,538,000** in revenue.\n2. **Key Metric / Finding:** The highest-revenue listed month was Oct (October), with **$57,128,000** revenue.\n3. **Major Insight:** The separate full-year total is **16,070** vehicles and **$612,400,000** in revenue; do not confuse this with the shorter reporting period.\n4. **Risk / Opportunity:** Inventory for Apex EV Volt-X: current stock **265,** in production **310,** reorder threshold **150** (reported status: Adequate).\n5. **Final Takeaway:** Manufacturing has the largest reported department workforce at **520** people.",
+            "citations": [
+              "[Source: apex_motors_data.xlsx]"
+            ],
+            "scope": "executive",
+            "evidence_count": 19,
+            "document_count": 1
+          }
+        }
+      ],
+      "successful_runs": 3,
+      "median_seconds": 0.099,
+      "p95_nearest_rank_seconds": 0.103,
+      "all_successful_under_10s": true
+    },
+    {
+      "id": "pdf_docx_comparison",
+      "module": "compare",
+      "files": [
+        "apex_motors_market_report.pdf",
+        "apex_motors_annual_report.docx"
+      ],
+      "runs": [
+        {
+          "seconds": 0.12,
+          "status": "success",
+          "validation": {
+            "correct_rows": [
+              true,
+              true
+            ],
+            "metric_row_coverage": 1.0,
+            "citations_present": true,
+            "note": "Strict ordered metric check; inspect citations/evidence manually."
+          },
+          "response": {
+            "answer": "| Metric | apex_motors_market_report.pdf | apex_motors_annual_report.docx | Change |\n|---|---|---|---|\n| Apex SUV Trailblazer FY2025 units sold | 5640 | 5640 | 0 |\n| Apex SUV Trailblazer starting price | 41200 | 41200 | 0 |",
+            "comparison": [
+              {
+                "metric": "Apex SUV Trailblazer FY2025 units sold",
+                "document_a": "5640",
+                "document_b": "5640",
+                "change": "0"
+              },
+              {
+                "metric": "Apex SUV Trailblazer starting price",
+                "document_a": "41200",
+                "document_b": "41200",
+                "change": "0"
+              }
+            ],
+            "citations": [
+              "[Source: apex_motors_market_report.pdf, Page 3]",
+              "[Source: apex_motors_annual_report.docx]"
+            ],
+            "document_count": 2
+          }
+        },
+        {
+          "seconds": 0.13,
+          "status": "success",
+          "validation": {
+            "correct_rows": [
+              true,
+              true
+            ],
+            "metric_row_coverage": 1.0,
+            "citations_present": true,
+            "note": "Strict ordered metric check; inspect citations/evidence manually."
+          },
+          "response": {
+            "answer": "| Metric | apex_motors_market_report.pdf | apex_motors_annual_report.docx | Change |\n|---|---|---|---|\n| Apex SUV Trailblazer FY2025 units sold | 5640 | 5640 | 0 |\n| Apex SUV Trailblazer starting price | 41200 | 41200 | 0 |",
+            "comparison": [
+              {
+                "metric": "Apex SUV Trailblazer FY2025 units sold",
+                "document_a": "5640",
+                "document_b": "5640",
+                "change": "0"
+              },
+              {
+                "metric": "Apex SUV Trailblazer starting price",
+                "document_a": "41200",
+                "document_b": "41200",
+                "change": "0"
+              }
+            ],
+            "citations": [
+              "[Source: apex_motors_market_report.pdf, Page 3]",
+              "[Source: apex_motors_annual_report.docx]"
+            ],
+            "document_count": 2
+          }
+        },
+        {
+          "seconds": 0.107,
+          "status": "success",
+          "validation": {
+            "correct_rows": [
+              true,
+              true
+            ],
+            "metric_row_coverage": 1.0,
+            "citations_present": true,
+            "note": "Strict ordered metric check; inspect citations/evidence manually."
+          },
+          "response": {
+            "answer": "| Metric | apex_motors_market_report.pdf | apex_motors_annual_report.docx | Change |\n|---|---|---|---|\n| Apex SUV Trailblazer FY2025 units sold | 5640 | 5640 | 0 |\n| Apex SUV Trailblazer starting price | 41200 | 41200 | 0 |",
+            "comparison": [
+              {
+                "metric": "Apex SUV Trailblazer FY2025 units sold",
+                "document_a": "5640",
+                "document_b": "5640",
+                "change": "0"
+              },
+              {
+                "metric": "Apex SUV Trailblazer starting price",
+                "document_a": "41200",
+                "document_b": "41200",
+                "change": "0"
+              }
+            ],
+            "citations": [
+              "[Source: apex_motors_market_report.pdf, Page 3]",
+              "[Source: apex_motors_annual_report.docx]"
+            ],
+            "document_count": 2
+          }
+        }
+      ],
+      "successful_runs": 3,
+      "median_seconds": 0.12,
+      "p95_nearest_rank_seconds": 0.13,
+      "all_successful_under_10s": true
+    },
+    {
+      "id": "fy25_fy26_comparison",
+      "module": "compare",
+      "files": [
+        "DocMindAI_Comparison_Test_A_FY2025.csv",
+        "DocMindAI_Comparison_Test_B_FY2026.xlsx"
+      ],
+      "runs": [
+        {
+          "seconds": 0.124,
+          "status": "success",
+          "validation": {
+            "correct_rows": [
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "metric_row_coverage": 1.0,
+            "citations_present": true,
+            "note": "Strict ordered metric check; inspect citations/evidence manually."
+          },
+          "response": {
+            "answer": "| Metric | DocMindAI_Comparison_Test_A_FY2025.csv | DocMindAI_Comparison_Test_B_FY2026.xlsx | Change |\n|---|---|---|---|\n| Revenue | 612400000 | 694800000 | +82400000 |\n| Total vehicles sold | 16070 | 17840 | +1770 |\n| Operating margin | 8.4 | 9.1 | +0.7 pp |\n| EV share | 11.5 | 16.2 | +4.7 pp |\n| Regional service centers | 6 | 8 | +2 |",
+            "comparison": [
+              {
+                "metric": "Revenue",
+                "document_a": "612400000",
+                "document_b": "694800000",
+                "change": "+82400000"
+              },
+              {
+                "metric": "Total vehicles sold",
+                "document_a": "16070",
+                "document_b": "17840",
+                "change": "+1770"
+              },
+              {
+                "metric": "Operating margin",
+                "document_a": "8.4",
+                "document_b": "9.1",
+                "change": "+0.7 pp"
+              },
+              {
+                "metric": "EV share",
+                "document_a": "11.5",
+                "document_b": "16.2",
+                "change": "+4.7 pp"
+              },
+              {
+                "metric": "Regional service centers",
+                "document_a": "6",
+                "document_b": "8",
+                "change": "+2"
+              }
+            ],
+            "citations": [
+              "[Source: DocMindAI_Comparison_Test_A_FY2025.csv]",
+              "[Source: DocMindAI_Comparison_Test_B_FY2026.xlsx, Sheet: Comparison Metrics]"
+            ],
+            "document_count": 2
+          }
+        },
+        {
+          "seconds": 0.197,
+          "status": "success",
+          "validation": {
+            "correct_rows": [
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "metric_row_coverage": 1.0,
+            "citations_present": true,
+            "note": "Strict ordered metric check; inspect citations/evidence manually."
+          },
+          "response": {
+            "answer": "| Metric | DocMindAI_Comparison_Test_A_FY2025.csv | DocMindAI_Comparison_Test_B_FY2026.xlsx | Change |\n|---|---|---|---|\n| Revenue | 612400000 | 694800000 | +82400000 |\n| Total vehicles sold | 16070 | 17840 | +1770 |\n| Operating margin | 8.4 | 9.1 | +0.7 pp |\n| EV share | 11.5 | 16.2 | +4.7 pp |\n| Regional service centers | 6 | 8 | +2 |",
+            "comparison": [
+              {
+                "metric": "Revenue",
+                "document_a": "612400000",
+                "document_b": "694800000",
+                "change": "+82400000"
+              },
+              {
+                "metric": "Total vehicles sold",
+                "document_a": "16070",
+                "document_b": "17840",
+                "change": "+1770"
+              },
+              {
+                "metric": "Operating margin",
+                "document_a": "8.4",
+                "document_b": "9.1",
+                "change": "+0.7 pp"
+              },
+              {
+                "metric": "EV share",
+                "document_a": "11.5",
+                "document_b": "16.2",
+                "change": "+4.7 pp"
+              },
+              {
+                "metric": "Regional service centers",
+                "document_a": "6",
+                "document_b": "8",
+                "change": "+2"
+              }
+            ],
+            "citations": [
+              "[Source: DocMindAI_Comparison_Test_A_FY2025.csv]",
+              "[Source: DocMindAI_Comparison_Test_B_FY2026.xlsx, Sheet: Comparison Metrics]"
+            ],
+            "document_count": 2
+          }
+        },
+        {
+          "seconds": 0.227,
+          "status": "success",
+          "validation": {
+            "correct_rows": [
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "metric_row_coverage": 1.0,
+            "citations_present": true,
+            "note": "Strict ordered metric check; inspect citations/evidence manually."
+          },
+          "response": {
+            "answer": "| Metric | DocMindAI_Comparison_Test_A_FY2025.csv | DocMindAI_Comparison_Test_B_FY2026.xlsx | Change |\n|---|---|---|---|\n| Revenue | 612400000 | 694800000 | +82400000 |\n| Total vehicles sold | 16070 | 17840 | +1770 |\n| Operating margin | 8.4 | 9.1 | +0.7 pp |\n| EV share | 11.5 | 16.2 | +4.7 pp |\n| Regional service centers | 6 | 8 | +2 |",
+            "comparison": [
+              {
+                "metric": "Revenue",
+                "document_a": "612400000",
+                "document_b": "694800000",
+                "change": "+82400000"
+              },
+              {
+                "metric": "Total vehicles sold",
+                "document_a": "16070",
+                "document_b": "17840",
+                "change": "+1770"
+              },
+              {
+                "metric": "Operating margin",
+                "document_a": "8.4",
+                "document_b": "9.1",
+                "change": "+0.7 pp"
+              },
+              {
+                "metric": "EV share",
+                "document_a": "11.5",
+                "document_b": "16.2",
+                "change": "+4.7 pp"
+              },
+              {
+                "metric": "Regional service centers",
+                "document_a": "6",
+                "document_b": "8",
+                "change": "+2"
+              }
+            ],
+            "citations": [
+              "[Source: DocMindAI_Comparison_Test_A_FY2025.csv]",
+              "[Source: DocMindAI_Comparison_Test_B_FY2026.xlsx, Sheet: Comparison Metrics]"
+            ],
+            "document_count": 2
+          }
+        }
+      ],
+      "successful_runs": 3,
+      "median_seconds": 0.197,
+      "p95_nearest_rank_seconds": 0.227,
+      "all_successful_under_10s": true
+    }
+  ]
+}

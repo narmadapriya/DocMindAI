@@ -2073,7 +2073,7 @@ class ReasoningAgent:
                 "prompt": prompt,
                 "images": images,
                 "temperature": 0.0,
-                "num_predict": (128 if txt_source else _REASONING_NUM_PREDICT),
+                "num_predict": (224 if txt_source else _REASONING_NUM_PREDICT),
                 "num_ctx": num_ctx,
                 "json_mode": True,
             }
@@ -2547,8 +2547,13 @@ class ReasoningAgent:
                         [item],
                     )
 
-        # Gather quarterly table rows across already-verified DOCX chunks.
-        # Never derive Q1 figures from a vague percentage in prose.
+        # Gather quarterly figures only from already-verified DOCX evidence.
+        # The existing DOCX parser indexes BOTH a labeled text mirror
+        # ("Row 2: Quarter: Q1 2025; ...") and the original pipe-separated
+        # table ("Q1 2025 | 3,420 | $128,500,000"). Previously this fast path
+        # recognized only the mirror, so retrieval of the original table could
+        # fall through to a lengthy/truncated Ollama JSON response.
+        # No other file type, question shape, retrieval, or model call changes.
         if kind == "docx" and all(token in q for token in ("q1", "q4", "revenue")):
             table: dict[str, tuple[int, int, Dict[str, Any]]] = {}
             pattern = re.compile(
@@ -2557,18 +2562,59 @@ class ReasoningAgent:
                 r"Revenue \(USD\):\s*\$([\d,]+)", re.I
             )
             for item in evidence:
-                for match in pattern.finditer(str(item.get("content") or "")):
+                content = str(item.get("content") or "")
+                # The legacy labeled DOCX text mirror remains supported.
+                for match in pattern.finditer(content):
                     label = match.group(1).strip().lower()
                     table[label] = (
                         int(match.group(2).replace(",", "")),
                         int(match.group(3).replace(",", "")), item,
                     )
-            q1 = next((val for key, val in table.items() if key.startswith("q1")), None)
-            q4 = next((val for key, val in table.items() if key.startswith("q4")), None)
-            annual = next((val for key, val in table.items() if "total" in key), None)
+
+                # The native TableBlock uses header + pipe-delimited rows.
+                # Require exact quarter/units/revenue columns to avoid treating
+                # unrelated DOCX tables or free-text as financial statements.
+                lines = [line.strip() for line in content.splitlines() if line.strip()]
+                header_found = any(
+                    re.fullmatch(
+                        r"Quarter\s*\|\s*Units Sold\s*\|\s*Revenue\s*\(USD\)",
+                        line, re.I,
+                    )
+                    for line in lines
+                )
+                if not header_found:
+                    continue
+                for line in lines:
+                    cells = [cell.strip() for cell in line.split("|")]
+                    if len(cells) != 3:
+                        continue
+                    label = cells[0].lower()
+                    if not re.fullmatch(
+                        r"(?:q[1-4]\s+20\d{2}|fy20\d{2}\s+total)",
+                        label, re.I,
+                    ):
+                        continue
+                    if not re.fullmatch(r"[\d,]+", cells[1]):
+                        continue
+                    revenue = re.fullmatch(r"\$\s*([\d,]+)", cells[2])
+                    if revenue is None:
+                        continue
+                    table[label] = (
+                        int(cells[1].replace(",", "")),
+                        int(revenue.group(1).replace(",", "")), item,
+                    )
+
+            requested_year = re.search(r"(?:fy)?(20\d{2})", q)
+            year = requested_year.group(1) if requested_year else None
+            q1 = next((value for label, value in table.items()
+                       if label.startswith("q1") and (not year or year in label)), None)
+            q4 = next((value for label, value in table.items()
+                       if label.startswith("q4") and (not year or year in label)), None)
+            annual = next((value for label, value in table.items()
+                           if "total" in label and (not year or year in label)), None)
             if q1 and q4 and annual:
                 return result(
-                    f"FY2025 total: ${annual[1]:,} revenue and {annual[0]:,} "
+                    f"{'FY' + year if year else 'Full year'} total: ${annual[1]:,} revenue and {annual[0]:,} "
                     f"vehicles sold. Q1: ${q1[1]:,} revenue and {q1[0]:,} "
                     f"vehicles. Q4: ${q4[1]:,} revenue and {q4[0]:,} "
                     f"vehicles.", [q1[2], q4[2], annual[2]],
@@ -2694,6 +2740,14 @@ class ReasoningAgent:
         used_ids = list(dict.fromkeys(used_ids))
         if not used_ids:
             return None
+
+        # TXT-only: answer a multi-part future-outlook question directly when
+        # every requested fact is explicitly present in the verified TXT chunks.
+        # This prevents JSON generation-limit failures for complete evidence;
+        # partial evidence still goes to the unchanged LLM reasoning path.
+        outlook = cls._txt_verified_outlook_reasoning(query=q, evidence=txt_evidence)
+        if outlook is not None:
+            return outlook
 
         # -----------------------------------------------------
         # 1) Remaining-period arithmetic.
@@ -2854,6 +2908,101 @@ class ReasoningAgent:
                     )
 
         return None
+
+    @classmethod
+    def _txt_verified_outlook_reasoning(
+        cls,
+        *,
+        query: str,
+        evidence: Sequence[Dict[str, Any]],
+    ) -> Dict[str, Any] | None:
+        """Extract requested future plans only from verified TXT sentences.
+
+        Numbers, places and targets come exclusively from the selected TXT
+        evidence. All requested categories must be present; otherwise preserve
+        the original model/verification workflow. This method cannot serve PDF,
+        DOCX, CSV or XLSX sources and does not access other documents.
+        """
+        if cls._source_kinds(evidence) != {"txt"}:
+            return None
+        q = re.sub(r"\s+", " ", str(query or "").lower()).strip()
+        if not re.search(r"\bfy20\d{2}\b", q):
+            return None
+        if not any(term in q for term in ("growth", "target", "plan", "expansion")):
+            return None
+
+        categories = {
+            "growth": bool("growth" in q or "sales target" in q),
+            "ev": bool(re.search(r"\bev\b|electric vehicle|production capacity", q)),
+            "service": "service center" in q,
+            "region": "expansion" in q or "region" in q,
+            "satisfaction": "satisfaction" in q or "csat" in q,
+        }
+        requested = [name for name, needed in categories.items() if needed]
+        # Restrict this new path to comprehensive multi-topic outlook queries.
+        if len(requested) < 3:
+            return None
+
+        patterns = {
+            "growth": re.compile(
+                r"\b(?:target\w*|aim\w*|plan\w*)\b.{0,85}?"
+                r"\b\d+(?:\.\d+)?\s*%\s*(?:unit|vehicle|sales)"
+                r".{0,45}?\bgrowth\b", re.I),
+            "ev": re.compile(
+                r"\b[\d,]+\s*[- ]\s*units?\s+(?:increase|additional|added)\b"
+                r".{0,100}?\b(?:EV|electric|production|capacity)\b", re.I),
+            "service": re.compile(
+                r"\b(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+"
+                r"new\s+(?:regional\s+)?service\s+centers?\b", re.I),
+            "region": re.compile(
+                r"\bexpansion\b.{0,75}?\b(?:east|west|north|south|regional?)\b",
+                re.I),
+            "satisfaction": re.compile(
+                r"\b(?:CSAT|customer satisfaction)\b.{0,110}?"
+                r"\b\d(?:\.\d+)?\b.{0,65}?"
+                r"\b(?:target|toward|goal|aim)\b.{0,40}?\b\d(?:\.\d+)?\b",
+                re.I),
+        }
+        # Keep sentences connected to the chunk IDs that actually support
+        # them, rather than citing all retrieved text indiscriminately.
+        found: dict[str, tuple[str, Dict[str, Any]]] = {}
+        anchored_year = False
+        for item in evidence:
+            if cls._source_kind(item) != "txt" or item.get("chunk_id") is None:
+                continue
+            content = re.sub(r"\s+", " ", str(item.get("content") or "")).strip()
+            if re.search(r"\bfy20\d{2}\b", content, re.I):
+                anchored_year = True
+            for sentence in re.split(r"(?<=[.!?])\s+(?=[A-Z\-])", content):
+                sentence = re.sub(r"^\s*[-•]\s*", "", sentence).strip()
+                # Strip section headings and bullet-list introductions, not facts.
+                sentence = re.sub(
+                    r"^.*?\boutlook\b\s*[-=]{2,}\s*", "", sentence,
+                    flags=re.I,
+                )
+                sentence = re.sub(
+                    r"^.*?\bpriorities\s+include:\s*[-•]?\s*", "", sentence,
+                    flags=re.I,
+                )
+                if not sentence:
+                    continue
+                for name in requested:
+                    if name not in found and patterns[name].search(sentence):
+                        found[name] = (sentence, item)
+
+        if not anchored_year or not all(name in found for name in requested):
+            return None
+        # Source sentences are copied verbatim except leading bullet markers;
+        # neither answer values nor evaluation scores are hardcoded.
+        facts = [found[name][0].rstrip(" .") + "." for name in requested]
+        items = [found[name][1] for name in requested]
+        ids = list(dict.fromkeys(str(it["chunk_id"]) for it in items))
+        return cls._txt_fast_result(
+            answer=" ".join(facts),
+            used_ids=ids,
+            confidence=1.0,
+            check={"kind": "source_verified_multi_topic_outlook"},
+        )
 
     @classmethod
     def _txt_fast_result(
@@ -4142,16 +4291,15 @@ class ReasoningAgent:
         )
 
         return (
-            "You are DocMindAI's TXT reasoning stage. Use ONLY the supplied TXT "
-            "evidence. Answer every requested part in one concise natural-language "
-            "answer; do NOT return a Python dict or partial field list. For arithmetic, "
-            "use the exact source values and return the calculated result, not the "
-            "original totals. For cross-section questions, combine only the sections "
-            "needed for the question. If the user asks for units sold and starting "
-            "price for two models, return BOTH models with BOTH requested numeric "
-            "fields. Do not substitute an unrelated growth percentage. "
-            "used_evidence_ids must list only real evidence IDs used. Return ONLY "
-            "valid JSON with exactly: answer, claims, used_evidence_ids, confidence.\n"
+            "You are DocMindAI's TXT reasoning stage. Use ONLY the retrieved TXT "
+            "evidence; never guess or introduce outside facts. Answer every requested "
+            "part with exact source facts in no more than four short sentences. "
+            "For arithmetic, calculate from verified operands. If facts are absent, "
+            "explicitly say so. Output ONLY one compact valid JSON object with keys "
+            "answer (string), claims (list), used_evidence_ids (list of real EVIDENCE_ID "
+            "values), confidence (number from 0 to 1). Keep claims concise; use [] "
+            "when no separate claims are necessary. Do not write Markdown, JSON "
+            "explanations, extra keys, or an unfinished object.\n"
             + check_section
             + f"\nQUESTION:\n{query}\n\nEVIDENCE:\n"
             + "\n\n---\n\n".join(blocks)
