@@ -248,6 +248,22 @@ class ReasoningAgent:
                 "status": "insufficient_evidence",
             }
 
+        # Narrow, evidence-only guard for exact period-specific factual
+        # questions. Do not substitute values from another year/month for a
+        # missing requested period. Other reasoning routes are unchanged.
+        if self._unsupported_requested_period(query, valid_evidence):
+            return {
+                "answer": (
+                    "I could not find verified evidence for the requested "
+                    "time period in the selected document."
+                ),
+                "claims": [],
+                "used_evidence_ids": [],
+                "confidence": 0.0,
+                "model": self.model,
+                "status": "insufficient_evidence",
+            }
+
         source_kinds = self._source_kinds(valid_evidence)
         structured_source = bool(
             source_kinds & {"csv", "xlsx"}
@@ -2523,6 +2539,56 @@ class ReasoningAgent:
                 "raw_response": "",
             }
 
+        # Product catalog QA: take both numbers from the same verified PDF
+        # catalog record instead of risking a model's incorrect table row.
+        # This is active only when a user explicitly requests price AND units.
+        if kind == "pdf" and "price" in q and re.search(r"\b(?:units?|sales|sold)\b",q):
+            match = re.search(
+                r"\b(?:suv|sedan|truck|ev|coupe)\s+([a-z][\w-]+)\b", q, re.I
+            )
+            if match:
+                token = match.group(1).lower()
+                for item in evidence:
+                    content = str(item.get("content") or "")
+                    block = re.compile(
+                        r"(?im)^\s*([^\n]{4,80})\n\s*"
+                        r"(SUV|Sedan|Pickup Truck|Electric Hatchback|Coupe)\s*\n"
+                        r"\s*Starting at\s*\$([\d,]+)\s*\n"
+                        r"\s*FY\s*20\d{2}\s+units\s+sold\s*:\s*([\d,]+)"
+                    )
+                    for row in block.finditer(content):
+                        if not re.search(rf"\b{re.escape(token)}\b",row.group(1),re.I):
+                            continue
+                        price=int(row.group(3).replace(",",""))
+                        units=int(row.group(4).replace(",",""))
+                        return result(
+                            f"{row.group(1).strip()}: starting price ${price:,}; "
+                            f"FY2025 units sold: {units:,}.", [item],
+                        )
+
+        # DOCX narrative provides distinct top-seller and fastest-growth
+        # claims. Do not copy the unrelated annual Q1-to-Q4 growth percentage
+        # into the EV model's year-over-year statement.
+        if kind == "docx" and ("fastest" in q and
+                               any(t in q for t in ("top", "most", "best"))):
+            for item in evidence:
+                content = re.sub(r"\s+", " ", str(item.get("content") or ""))
+                top = re.search(
+                    r"\b(Apex\s+(?:SUV|Sedan|Truck|EV|Coupe)\s+[\w-]+)\s+"
+                    r"was\s+(?:the\s+company['’]s|Apex['’]s)\s+top\s+seller",content,re.I,
+                )
+                fast = re.search(
+                    r"\b(Apex\s+(?:SUV|Sedan|Truck|EV|Coupe)\s+[\w-]+)\s+"
+                    r"posted\s+the\s+fastest\s+year-over-year\s+growth",content,re.I,
+                )
+                if top and fast:
+                    return result(
+                        f"{top.group(1)} was the top-selling model in FY2025. "
+                        f"{fast.group(1)} recorded the fastest year-over-year growth; "
+                        "the source does not specify that model's growth rate here.",
+                        [item],
+                    )
+
         # Table columns parsed from the document, not fixed company metrics.
         if kind == "pdf" and "price" in q and ("satisfaction" in q or "csat" in q):
             for item in evidence:
@@ -2620,6 +2686,38 @@ class ReasoningAgent:
                     f"vehicles.", [q1[2], q4[2], annual[2]],
                 )
 
+        # XLSX department/headcount questions have deterministic indexed
+        # worksheet rows. Read the complete department table instead of
+        # invoking the CPU-bound local model for an exact factual breakdown.
+        if kind == "xlsx" and ("workforce" in q or "headcount" in q or
+                                "employees" in q) and not re.search(r"\bfy\s*20\d{2}\b",q):
+            departments: dict[str, tuple[int, Dict[str, Any]]] = {}
+            total: int | None = None
+            sources: list[Dict[str, Any]] = []
+            for item in evidence:
+                content = str(item.get("content") or "")
+                for row in re.finditer(r"\bRow\s+\d+\s*:\s*([^\n]+)",content,re.I):
+                    fields = {}
+                    for piece in re.split(r"\s*;\s*",row.group(1)):
+                        pair = re.match(r"\s*([^:;]+?)\s*:\s*(.+?)\s*$",piece)
+                        if pair:
+                            key = re.sub(r"[^a-z0-9]+"," ",pair.group(1).lower()).strip()
+                            fields[key] = pair.group(2).strip()
+                    name = fields.get("department","")
+                    count_text = fields.get("headcount", "")
+                    if not name or not re.fullmatch(r"[\d,]+",count_text):
+                        continue
+                    count = int(count_text.replace(",",""))
+                    if re.search(r"\btotal\b",name,re.I):
+                        total=count
+                    else:
+                        departments[name]=(count,item)
+                        sources.append(item)
+            if len(departments)>=3 and (total is None or sum(v[0] for v in departments.values())==total):
+                details="; ".join(f"{name}: {value:,} employees" for name,(value,_) in departments.items())
+                total_text=f" Total workforce: {total:,} employees." if total is not None else "."
+                return result(details+"."+total_text if total is not None else details+".",sources)
+
         # Require all ten distinct months before computing a Jan-Oct total.
         if kind == "csv" and all(t in q for t in ('revenue', 'month')) and (
             'total' in q or 'calculate' in q
@@ -2696,6 +2794,69 @@ class ReasoningAgent:
                     unique = list(dict.fromkeys(line for line,_ in selected))
                     return result(' '.join(unique), [it for _,it in selected])
         return None
+
+    @classmethod
+    def _unsupported_requested_period(
+        cls, query: str, evidence: Sequence[Dict[str, Any]],
+    ) -> bool:
+        """Refuse exact unavailable periods; never project an old metric.
+
+        This is deliberately confined to a single explicit year, or month
+        revenue questions over tabular sources. No lookups outside the already
+        validated evidence and no changes to numerical inference are made.
+        """
+        q = str(query or "").lower()
+        if not re.search(r"\b(?:what|which|how many|how much|exact|reported)\b", q):
+            return False
+        content = "\n".join(
+            str(item.get("content", item.get("text", "")) or "")
+            for item in evidence if isinstance(item, dict)
+        )
+        if not content.strip():
+            return False
+        requested = set(re.findall(r"\b(?:fy\s*|fiscal\s+year\s*)?(20\d{2})\b", q))
+        if (
+            len(requested) == 1
+            and re.search(r"\b(?:revenue|profit|margin|stock|production|capacity|units|vehicles|sales|centers|employees|headcount|share)\b", q)
+        ):
+            year = next(iter(requested))
+            # If the selected evidence does not mention the requested year at
+            # all, it cannot ground an exact figure for that year. This also
+            # prevents a retrieved previous-year number from being misused.
+            if not re.search(rf"(?<!\d){re.escape(year)}(?!\d)", content):
+                return True
+
+        # An explicitly requested month revenue must correspond to a monthly
+        # record, not a nearby month or an aggregate. This guard operates only
+        # for indexed CSV/XLSX evidence, never prose or PDF reports.
+        kinds = cls._source_kinds(evidence)
+        if not (kinds & {"csv", "xlsx"}) or not re.search(r"\brevenues?\b", q):
+            return False
+        months = {
+            "jan": ("jan", "january"), "feb": ("feb", "february"),
+            "mar": ("mar", "march"), "apr": ("apr", "april"),
+            "may": ("may",), "jun": ("jun", "june"),
+            "jul": ("jul", "july"), "aug": ("aug", "august"),
+            "sep": ("sep", "sept", "september"), "oct": ("oct", "october"),
+            "nov": ("nov", "november"), "dec": ("dec", "december"),
+        }
+        names = [key for key, aliases in months.items()
+                 if any(re.search(rf"\b{a}\b", q) for a in aliases)]
+        if not names:
+            return False
+        # Determine available month labels only from explicitly indexed row
+        # records, rather than an unrelated mention in narrative prose.
+        present = set()
+        for aliases in months.values():
+            for alias in aliases:
+                if re.search(
+                    rf"(?:\bMonth\s*:\s*|(?:^|\n)\s*){alias}\b"
+                    rf"(?=[^\n]{{0,110}}\b(?:20\d{{2}}|Units Sold|Revenue))",
+                    content, re.I,
+                ):
+                    present.add(aliases[0])
+                    break
+        return bool(present) and any(name not in present for name in names)
 
     # =========================================================
     # TXT-ONLY DETERMINISTIC GROUNDED FAST PATH

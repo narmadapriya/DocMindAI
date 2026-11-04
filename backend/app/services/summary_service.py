@@ -132,6 +132,22 @@ class SummaryService:
                     )
                     return output
 
+        # A complete indexed CSV/XLSX table is more informative than generic
+        # metadata such as "10 rows, 5 columns". Compose its verifiable
+        # metrics directly from the same already-selected evidence, without
+        # changing the RAG/summary agents, the API, or scoped instructions.
+        if not instructions and normalized_scope in self.WHOLE_DOCUMENT_SCOPES:
+            table_summary = self._source_grounded_tabular_presentation(
+                evidence=focused_evidence, scope=normalized_scope,
+            )
+            if table_summary is not None:
+                output = dict(result)
+                output["summary"] = table_summary
+                output["citations"] = self._document_level_summary_citations(
+                    evidence=focused_evidence
+                )
+                return output
+
         # Presentation-only Phase-15 hardening. Retrieval, evidence selection,
         # summarization logic, API schemas, authentication, and persistence are
         # unchanged. The existing grounded summary text is only reorganized
@@ -141,6 +157,147 @@ class SummaryService:
             evidence=focused_evidence,
             scope=normalized_scope,
         )
+
+    @classmethod
+    def _source_grounded_tabular_presentation(
+        cls, *, evidence: Sequence[Dict[str, Any]], scope: str,
+    ) -> str | None:
+        """Render complete, verified CSV/XLSX metrics, not parser metadata.
+
+        Read-only; uses exclusively the evidence already loaded for the
+        requested document. A partial/unrecognized table falls back to the
+        existing summary presentation. No benchmark answers are embedded.
+        """
+        if not evidence:
+            return None
+        kinds: set[str] = set()
+        for item in evidence:
+            meta = dict(item.get("metadata") or {})
+            for value in (
+                item.get("file_type"), meta.get("file_type"),
+                item.get("filename"), meta.get("filename"),
+                meta.get("original_filename"), meta.get("source_file"),
+            ):
+                v = str(value or "").lower().strip().lstrip(".")
+                if v in {"csv", "xlsx"}:
+                    kinds.add(v)
+                elif v.endswith(".csv"):
+                    kinds.add("csv")
+                elif v.endswith(".xlsx"):
+                    kinds.add("xlsx")
+        if not kinds or not kinds.issubset({"csv", "xlsx"}):
+            return None
+
+        def numeric(value: str):
+            m = re.fullmatch(r"\s*[$€£₹]?\s*([\d,]+)(?:\.0+)?\s*", str(value or ""))
+            return int(m.group(1).replace(",", "")) if m else None
+
+        months = {"jan": 1, "feb": 2, "mar": 3, "apr": 4,
+                  "may": 5, "jun": 6, "jul": 7, "aug": 8,
+                  "sep": 9, "oct": 10, "nov": 11, "dec": 12}
+        monthly: dict[tuple[str, int], tuple[int, int]] = {}
+        explicit_totals: list[tuple[int, int]] = []
+        inventory: dict[str, tuple[int, int]] = {}
+        workforce: dict[str, int] = {}
+        metrics: dict[str, str] = {}
+        for item in evidence:
+            content = str(item.get("content", item.get("text", "")) or "")
+            # The parser emits semicolon-separated "Row N: Field: Value"
+            # blocks; split on each boundary without crossing unrelated rows.
+            records = re.split(r"\bRow\s+\d+\s*:\s*", content, flags=re.I)
+            for record in records[1:]:
+                record = re.split(r"\bRow\s+\d+\s*:\s*", record)[0]
+                fields = {}
+                for piece in re.split(r"\s*;\s*", record.splitlines()[0]):
+                    m = re.match(r"\s*([^:;]+?)\s*:\s*(.+)\s*$", piece)
+                    if m:
+                        key = re.sub(r"[^a-z0-9]+", " ", m.group(1).lower()).strip()
+                        fields[key] = m.group(2).strip()
+                if not fields:
+                    continue
+                label = fields.get("month", "").lower().strip()
+                units = numeric(fields.get("units sold", ""))
+                revenue = numeric(fields.get("revenue usd", fields.get("revenue", "")))
+                year = fields.get("year", "")
+                if label[:3] in months and re.fullmatch(r"20\d{2}", year) and units is not None and revenue is not None:
+                    monthly[(year, months[label[:3]])] = (units, revenue)
+                elif "total" in label and units is not None and revenue is not None:
+                    explicit_totals.append((units, revenue))
+
+                model = fields.get("model", "").strip()
+                stock = numeric(fields.get("current stock", ""))
+                production = numeric(fields.get("in production", ""))
+                if model and stock is not None and production is not None:
+                    inventory[model] = (stock, production)
+                department = fields.get("department", "").strip()
+                count = numeric(fields.get("headcount", fields.get("employees", "")))
+                if department and count is not None:
+                    workforce[department] = count
+                metric, value = fields.get("metric", "").strip(), fields.get("value", "").strip()
+                if metric and value and re.search(r"\d", value):
+                    metrics[metric] = value
+
+            # Complete original pipe table rows, if no Row N mirror exists.
+            for line in content.splitlines():
+                parts = [x.strip() for x in line.split("|")]
+                if len(parts) >= 5 and parts[0].lower()[:3] in months and re.fullmatch(r"20\d{2}",parts[1]):
+                    units, revenue = numeric(parts[2]), numeric(parts[4])
+                    if units is not None and revenue is not None:
+                        monthly[(parts[1],months[parts[0].lower()[:3]])] = (units,revenue)
+
+        findings: list[str] = []
+        groups: dict[str, dict[int, tuple[int, int]]] = {}
+        for (year,month),values in monthly.items():
+            groups.setdefault(year,{})[month] = values
+        best_year = max(groups, key=lambda y:len(groups[y])) if groups else ""
+        best = groups.get(best_year, {})
+        consecutive = bool(best) and set(best) == set(range(1,max(best)+1))
+        if best and consecutive and len(best) >= 3:
+            total_units = sum(row[0] for row in best.values())
+            total_revenue = sum(row[1] for row in best.values())
+            if not explicit_totals or (total_units,total_revenue) in explicit_totals:
+                labels = list(months)
+                last = labels[max(best)-1].title()
+                findings.append(
+                    f"January–{last} {best_year} sales: {total_units:,} vehicles and "
+                    f"${total_revenue:,} revenue (reported monthly records)."
+                )
+                peak_month = max(best,key=lambda m:best[m][1])
+                findings.append(
+                    f"Highest monthly revenue: {labels[peak_month-1].title()} {best_year} "
+                    f"at ${best[peak_month][1]:,}, with {best[peak_month][0]:,} vehicles sold."
+                )
+        elif explicit_totals:
+            units,revenue = explicit_totals[0]
+            findings.append(f"Reported total row: {units:,} vehicles and ${revenue:,} revenue.")
+
+        for model,(stock,production) in list(inventory.items())[:8]:
+            findings.append(
+                f"{model}: {stock:,} units in current stock and {production:,} units in production."
+            )
+        for department,count in list(workforce.items())[:8]:
+            findings.append(f"{department} workforce: {count:,} employees.")
+        for label,value in list(metrics.items())[:14]:
+            findings.append(f"{label}: {value}.")
+
+        if not findings:
+            return None
+        # One selected document is the existing API requirement for Summaries.
+        filename, _author, _publication = cls._document_identity(evidence)
+        ext = "CSV" if kinds == {"csv"} else "Excel"
+        overview = f"{filename} is an indexed {ext} dataset covering the verified metrics listed below."
+        lines = (
+            ["### Executive Summary", "", f"**Executive Overview:** {overview}",
+             "", "#### Critical Metrics & KPIs"]
+            if scope == "executive"
+            else [f"### {filename}", "", f"**Document Overview:** {overview}",
+                  "", "#### Key Information & Verified Figures"]
+        )
+        lines.extend(f"- {item}" for item in findings)
+        lines.extend(["", "#### Conclusion",
+                      "The figures above are taken from the selected document's indexed records; "
+                      "no unsupported forecast or missing-period values have been inferred."])
+        return "\n".join(lines)
 
     @classmethod
     def _present_complete_scoped_executive(cls, summary: str) -> str | None:
