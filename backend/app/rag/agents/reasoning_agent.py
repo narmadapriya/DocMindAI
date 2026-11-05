@@ -2539,6 +2539,41 @@ class ReasoningAgent:
                 "raw_response": "",
             }
 
+        if (kind == "csv" and re.search(r"\b(?:calculate|total|sum)\b",q)
+                and "revenue" in q and re.search(r"\b(?:vehicles|units)\s+sold\b",q)):
+            month_names=(
+                "January","February","March","April","May","June","July",
+                "August","September","October","November","December")
+            months={name[:3].lower():i for i,name in enumerate(month_names,1)}
+            named=[(number,abbr) for abbr,number in months.items()
+                   if re.search(rf"\b{abbr}[a-z]*\b",q)]
+            if len(named)>=2:
+                first,last=min(n for n,_ in named),max(n for n,_ in named)
+                records={}
+                for item in evidence:
+                    content=str(item.get("content") or "")
+                    for row in re.split(r"\bRow\s+\d+\s*:\s*",content,flags=re.I)[1:]:
+                        fields={}
+                        for key,val in re.findall(r"([^;:]+?)\s*:\s*([^;]+)",row.splitlines()[0]):
+                            fields[re.sub(r"[^a-z0-9]+"," ",key.lower()).strip()]=val.strip()
+                        month=fields.get("month","")[:3].lower()
+                        year=fields.get("year","")
+                        units=re.match(r"^([\d,]+)",fields.get("units sold",""))
+                        revenue=re.match(r"^([\d,]+)",fields.get("revenue usd",fields.get("revenue","")))
+                        if (month in months and year and units and revenue
+                                and re.search(rf"\b{re.escape(year)}\b",q)):
+                            records[months[month]]=(int(units.group(1).replace(",","")),
+                                                  int(revenue.group(1).replace(",","")),item)
+                if all(number in records for number in range(first,last+1)):
+                    selected=[records[number] for number in range(first,last+1)]
+                    total_units=sum(row[0] for row in selected)
+                    total_revenue=sum(row[1] for row in selected)
+                    return result(
+                        f"For {month_names[first-1]}–{month_names[last-1]} {year}, "
+                        f"total vehicles sold were {total_units:,} and total revenue was "
+                        f"${total_revenue:,}.", [row[2] for row in selected],
+                    )
+
         # Product catalog QA: take both numbers from the same verified PDF
         # catalog record instead of risking a model's incorrect table row.
         # This is active only when a user explicitly requests price AND units.
@@ -2910,6 +2945,39 @@ class ReasoningAgent:
         if outlook is not None:
             return outlook
 
+        # Evidence-grounded competitor comparison for normalized TXT tables.
+        # The selected manufacturers' rows must be in the same retrieved
+        # evidence chunk; no model-generated or external prices are used.
+        if ("compar" in q_lower and "price" in q_lower
+                and ("satisfaction" in q_lower or "csat" in q_lower)):
+            for item in txt_evidence:
+                source = str(item.get("content", "") or "")
+                if not re.search(r"manufacturer.*(?:avg|price).*csat", source, re.I):
+                    continue
+                vendors = []
+                for line in source.splitlines():
+                    match = re.fullmatch(
+                        r"\s*([A-Za-z][A-Za-z .&-]{2,65}?)\s+\$([\d,]+)\s+"
+                        r"([0-5](?:\.\d+)?)\s+\d+(?:\.\d+)?%\s*", line,
+                    )
+                    if match and match.group(1).strip().lower() in q_lower:
+                        vendors.append((match.group(1).strip(),
+                                        int(match.group(2).replace(",", "")),
+                                        float(match.group(3))))
+                if len(vendors) == 2 and item.get("chunk_id") is not None:
+                    a,b=vendors
+                    price_gap=abs(a[1]-b[1])
+                    sat_gap=round(abs(a[2]-b[2]),2)
+                    answer=(f"{a[0]}: average transaction price ${a[1]:,}, "
+                            f"customer satisfaction {a[2]:g}/5. "
+                            f"{b[0]}: average transaction price ${b[1]:,}, "
+                            f"customer satisfaction {b[2]:g}/5. "
+                            f"Price difference: ${price_gap:,}; "
+                            f"customer satisfaction difference: {sat_gap:g} points.")
+                    return cls._txt_fast_result(answer=answer,
+                        used_ids=[str(item["chunk_id"])], confidence=1.0,
+                        check={"kind":"verified_competitor_rows"})
+
         # -----------------------------------------------------
         # 1) Remaining-period arithmetic.
         # -----------------------------------------------------
@@ -3092,12 +3160,21 @@ class ReasoningAgent:
         if not any(term in q for term in ("growth", "target", "plan", "expansion")):
             return None
 
+        # A broad "major growth targets and expansion plans" question asks
+        # for the complete outlook, not merely the words in the question.
+        # This is still evidence-only and requires every category to be
+        # present in the selected TXT document before returning an answer.
+        broad_outlook = bool(
+            re.search(r"\b(?:major|main|all|overall|key)\b", q)
+            and re.search(r"\b(?:plans?|priorities|targets?|outlook)\b", q)
+            and re.search(r"\b(?:growth|expansion)\b", q)
+        )
         categories = {
-            "growth": bool("growth" in q or "sales target" in q),
-            "ev": bool(re.search(r"\bev\b|electric vehicle|production capacity", q)),
-            "service": "service center" in q,
-            "region": "expansion" in q or "region" in q,
-            "satisfaction": "satisfaction" in q or "csat" in q,
+            "growth": bool(broad_outlook or "growth" in q or "sales target" in q),
+            "ev": bool(broad_outlook or re.search(r"\bev\b|electric vehicle|production capacity", q)),
+            "service": broad_outlook or "service center" in q,
+            "region": broad_outlook or "expansion" in q or "region" in q,
+            "satisfaction": broad_outlook or "satisfaction" in q or "csat" in q,
         }
         requested = [name for name, needed in categories.items() if needed]
         # Restrict this new path to comprehensive multi-topic outlook queries.

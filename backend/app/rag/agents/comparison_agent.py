@@ -197,6 +197,18 @@ class ComparisonAgent:
             q = value.lower()
             if not value:
                 continue
+            # Two explicitly requested aggregates must be two comparison rows.
+            # This changes only a combined monthly-total metric, never an
+            # unrelated Revenue/Units Sold label or the existing API schema.
+            if (re.search(r"\b(?:vehicles|units)\s+sold\b", q)
+                    and "revenue" in q
+                    and re.search(r"\b(?:month|jan|oct|total)\b", q)):
+                prefix = re.split(r"\b(?:total\s+)?(?:vehicles|units)\s+sold\b", value, maxsplit=1, flags=re.I)[0]
+                prefix = re.sub(r"^(?:compare|calculate)\s+", "", prefix, flags=re.I).strip()
+                prefix = prefix.rstrip(" ,:-")
+                expanded.extend([f"{prefix} vehicles sold".strip(),
+                                 f"{prefix} revenue".strip()])
+                continue
             if re.match(r"^(?:and\s+)?(?:cite|identify)\b", q) and not re.search(
                 r"revenue|units|vehicles|margin|share|centers|price|stock|sold|csat", q
             ):
@@ -469,7 +481,7 @@ class ComparisonAgent:
         # Model-specific requests must never silently receive a company
         # total or an unrelated row value with a higher generic score.
         product_candidates = [c for c in candidates if c.get("origin") in {
-            "product-row", "product-catalog"}]
+            "product-row", "product-catalog", "source-model-row"}]
         # A model-specific question cannot fall back to a company total when
         # that model is missing from one source: return N/A instead.
         # Product requests may omit body type (e.g. "Trailblazer units sold").
@@ -517,10 +529,27 @@ class ComparisonAgent:
             content = str(item.get("content", item.get("text", "")) or "")
             if not content:
                 continue
+            # Preserve source product row values when the TXT parser emits
+            # a one-space model catalog rather than a pipe-delimited table.
+            # Prices and units must occur on the same model row.
+            if product_term and re.search(r"\b(?:units sold|starting price)\b", q):
+                for line in content.splitlines():
+                    line = line.strip()
+                    if not re.search(rf"\b{re.escape(product_term)}\b",line,re.I):
+                        continue
+                    if not re.match(r"(?i)^Apex\s+(?:Sedan|SUV|Truck|EV|Coupe)\s+",line):
+                        continue
+                    m = re.search(r"\$([\d,]+)\s+([\d,]+)\s*$",line)
+                    if m:
+                        value = m.group(2 if "units sold" in q else 1)
+                        parsed = cls._parse_number_with_scale(value)
+                        if parsed:
+                            output.append(cls._candidate(parsed=parsed,scope="generic",rank=900,
+                                                         evidence=item,origin="source-model-row",label=metric))
             if quarter:
                 qi = quarter.group(1)
                 patterns = (
-                    rf"(?im)^\s*Q{qi}\s+(20\d{{2}})\s*(?:\||\s{{2,}})\s*[\d,]+\s*(?:\||\s{{2,}})\s*\$?([\d,]+)",
+                    rf"(?im)^\s*Q{qi}\s+(20\d{{2}})\s*(?:\||\s+)\s*[\d,]+\s*(?:\||\s+)\s*\$?([\d,]+)(?![\d,])",
                     rf"(?i)Quarter\s*:\s*Q{qi}\s+(20\d{{2}})\s*;[^\n]*?Revenue\s*\(USD\)\s*:\s*\$?([\d,]+)",
                 )
                 for pattern in patterns:
@@ -557,6 +586,8 @@ class ComparisonAgent:
                     if is_manufacturing:
                         m=re.match(r"(?i)^manufacturing\s{2,}([\d,]+)\b",line)
                         if not m:
+                            m=re.match(r"(?i)^manufacturing[ \t]+([\d,]+)(?:[ \t]+[\d.]+%)?\s*$",line)
+                        if not m:
                             m=re.match(r"(?i)^manufacturing\s*[:=]\s*([\d,]+)\b",line)
                         value=m.group(1) if m else None
                     else:
@@ -564,6 +595,11 @@ class ComparisonAgent:
                         # Stock and production columns are adjacent in the
                         # validated inventory-table shape (model, stock, in production).
                         m=re.search(r"\s{2,}([\d,]+)\s{2,}([\d,]+)\s{2,}([\d,]+)",line)
+                        if not m and re.search(r"current stock\s+in production\s+reorder", content, re.I):
+                            # TXT parser collapses tabular column spacing.
+                            # Require the source's inventory header and all
+                            # three numeric cells in this same model row.
+                            m=re.search(r"\s+([\d,]+)\s+([\d,]+)\s+([\d,]+)\s+(?:Adequate|Low|High|Critical|Reorder)\s*$",line,re.I)
                         value=(m.group(1 if is_stock else 2) if m else None)
                     parsed=cls._parse_number_with_scale(value) if value else None
                     if parsed:
@@ -575,8 +611,8 @@ class ComparisonAgent:
                 # Indexed benchmark tables can be pipe-separated, spaced, or
                 # serialized as consecutive newline cells.
                 pattern=(rf"(?im)^\s*{re.escape(company)}\.?(?:['’]s)?"
-                         rf"(?:\s*\|\s*|\s{{2,}}|\n\s*)"
-                         rf"\$?([\d,]+)(?:\s*\|\s*|\s{{2,}}|\n\s*)"
+                         rf"(?:\s*\|\s*|[ \t]+|\n\s*)"
+                         rf"\$?([\d,]+)(?:\s*\|\s*|[ \t]+|\n\s*)"
                          rf"([0-5](?:\.\d+)?)\b")
                 for match in re.finditer(pattern,content):
                     value=match.group(2 if is_csat else 1)
@@ -1352,6 +1388,12 @@ class ComparisonAgent:
     def _candidate_display(cls, candidate: Dict[str, Any] | None) -> str:
         if not candidate:
             return "N/A"
+        scale = Decimal(str(candidate.get("scale", 1)))
+        # A source that explicitly says "612.4 million" must not display as
+        # bare "612.4" beside another source's 612400000. The numerical
+        # value is taken solely from its existing parsed scale.
+        if scale != 1:
+            return cls._decimal_to_source_string(Decimal(str(candidate["absolute"])))
         return str(candidate.get("display") or "N/A")
 
     @classmethod

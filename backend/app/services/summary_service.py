@@ -107,7 +107,8 @@ class SummaryService:
         # The generic executive formatter instead re-selects unrelated worksheet
         # headings from evidence, losing the scoped facts. This branch changes
         # presentation only; unscoped/other summaries keep the frozen formatter.
-        if instructions and normalized_scope == "executive":
+        if (instructions and normalized_scope == "executive"
+                and not self._is_general_summary_instruction(instructions)):
             structured_builder = getattr(
                 self.summary_agent, "_structured_executive_focus", None
             )
@@ -136,9 +137,10 @@ class SummaryService:
         # metadata such as "10 rows, 5 columns". Compose its verifiable
         # metrics directly from the same already-selected evidence, without
         # changing the RAG/summary agents, the API, or scoped instructions.
-        if not instructions and normalized_scope in self.WHOLE_DOCUMENT_SCOPES:
+        if ((not instructions or self._is_general_summary_instruction(instructions))
+                and normalized_scope in self.WHOLE_DOCUMENT_SCOPES):
             table_summary = self._source_grounded_tabular_presentation(
-                evidence=focused_evidence, scope=normalized_scope,
+                evidence=evidence, scope=normalized_scope,
             )
             if table_summary is not None:
                 output = dict(result)
@@ -157,6 +159,25 @@ class SummaryService:
             evidence=focused_evidence,
             scope=normalized_scope,
         )
+
+    @staticmethod
+    def _is_general_summary_instruction(instructions: str) -> bool:
+        """Recognize broad whole-file summary requests, not custom subscopes.
+
+        A broad user instruction should not accidentally suppress a source-
+        derived CSV/XLSX summary. Targeted scopes still use the existing
+        summary agent/formatting path without changes.
+        """
+        q = re.sub(r"\s+", " ", str(instructions or "").lower()).strip()
+        if not q:
+            return True
+        if re.search(r"\b(?:only|exclusively|focus solely|restrict to|limit to|do not include)\b",q):
+            return False
+        return bool(re.search(
+            r"\b(?:file summary|executive summary|selected document|"
+            r"whole document|source citations|key highlights|critical kpis|"
+            r"main findings|key topics|overview)\b", q,
+        ))
 
     @classmethod
     def _source_grounded_tabular_presentation(
