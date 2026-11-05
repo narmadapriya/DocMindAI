@@ -1,0 +1,11 @@
+test_id,module,successful_runs,median_seconds,p95_seconds,max_seconds,all_within_target
+Q10,Chat & Ask,3,0.164,0.17,0.17,True
+FY25_CSV_File,Summaries - File,3,75.178,87.85,87.85,False
+FY25_CSV_Executive,Summaries - Executive,3,39.265,39.738,39.738,False
+FY26_XLSX_File,Summaries - File,3,77.114,77.867,77.867,False
+FY26_XLSX_Executive,Summaries - Executive,3,30.158,31.784,31.784,False
+C2,Comparisons,3,0.116,0.146,0.146,True
+C3,Comparisons,3,0.095,0.1,0.1,True
+C4,Comparisons,3,0.115,0.158,0.158,True
+C6,Comparisons,3,0.103,0.306,0.306,True
+C7,Comparisons,3,0.104,0.127,0.127,True

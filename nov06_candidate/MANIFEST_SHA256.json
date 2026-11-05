@@ -1,0 +1,15 @@
+{
+  "modified_files": [
+    {
+      "path": "backend/app/services/summary_service.py",
+      "based_on_sha256": "22f7461cb3976386bd64d608960d492f7275883d7a64cdacc10683c965cdd5d7",
+      "corrected_sha256": "a09cae3733117717c895e4600d79951f9a7ec49c362740c2dae13f2cd9e58e05"
+    }
+  ],
+  "source": "Nov 5 candidate; not byte-verified Nov 1 baseline",
+  "checks": [
+    "py_compile",
+    "four offline guard checks",
+    "AST only summarize() changed"
+  ]
+}

@@ -1,0 +1,538 @@
+{
+  "created_utc": "2026-11-05T19:56:52.499569+00:00",
+  "mode": "performance-only; no original expected answers modified",
+  "latency_scope": "Authenticated HTTP request-to-response only; excludes browser rendering",
+  "cache_note": "Repeated requests may be served from cache; warmup=0 is not a guarantee of cold-start",
+  "target_seconds": 10.0,
+  "runs": 3,
+  "warmup": 1,
+  "tests": [
+    {
+      "id": "Q10",
+      "module": "Chat & Ask",
+      "filenames": [
+        "apex_motors_monthly_sales_2025.csv"
+      ],
+      "original_question": "Calculate total vehicles sold and total revenue from January to October 2025.",
+      "expected_answer_unchanged": "12,940 vehicles; $488,538,000 revenue; cite CSV January-October rows.",
+      "api_metric_fields": null,
+      "measured": [
+        {
+          "seconds": 0.472,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.16,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.166,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "warmup": [
+        {
+          "seconds": 3.662,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "successful_measured_runs": 3,
+      "all_measured_successful": true,
+      "within_target_all_runs": true,
+      "min_seconds": 0.16,
+      "median_seconds": 0.166,
+      "mean_seconds": 0.266,
+      "p95_nearest_rank_seconds": 0.472,
+      "max_seconds": 0.472
+    },
+    {
+      "id": "FY25_CSV_File",
+      "module": "Summaries - File",
+      "filenames": [
+        "DocMindAI_Comparison_Test_A_FY2025.csv"
+      ],
+      "original_question": "Generate a concise, accurate File Summary of the selected document. Include its overview, key topics, exact facts and figures, main findings, conclusion, and source citations. Do not invent missing details.",
+      "expected_answer_unchanged": "FY2025 revenue $612.4M, 16,070 vehicles, average price $38,100, operating margin 8.4%, CSAT 4.6/5, EV share 11.5%, 1,240 employees, 6 regional service centers; South 5,150 vehicles and East 3,180; cite CSV metric rows.",
+      "api_metric_fields": null,
+      "measured": [
+        {
+          "seconds": 0.051,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.056,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.075,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "warmup": [
+        {
+          "seconds": 0.083,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "successful_measured_runs": 3,
+      "all_measured_successful": true,
+      "within_target_all_runs": true,
+      "min_seconds": 0.051,
+      "median_seconds": 0.056,
+      "mean_seconds": 0.061,
+      "p95_nearest_rank_seconds": 0.075,
+      "max_seconds": 0.075
+    },
+    {
+      "id": "FY25_CSV_Executive",
+      "module": "Summaries - Executive",
+      "filenames": [
+        "DocMindAI_Comparison_Test_A_FY2025.csv"
+      ],
+      "original_question": "Generate an Executive Summary containing an overview, objective and scope, key highlights, critical KPIs, findings, supported risks, recommendations if justified, conclusion, and source citations. Preserve all numerical values exactly.",
+      "expected_answer_unchanged": "FY2025 $612.4M revenue, 16,070 vehicles, operating margin 8.4%, EV share 11.5%, CSAT 4.6/5, 6 service centers, Trailblazer 5,640 and Volt-X 1,850 vehicles; cite CSV metric rows.",
+      "api_metric_fields": null,
+      "measured": [
+        {
+          "seconds": 0.099,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.068,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.051,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "warmup": [
+        {
+          "seconds": 0.201,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "successful_measured_runs": 3,
+      "all_measured_successful": true,
+      "within_target_all_runs": true,
+      "min_seconds": 0.051,
+      "median_seconds": 0.068,
+      "mean_seconds": 0.073,
+      "p95_nearest_rank_seconds": 0.099,
+      "max_seconds": 0.099
+    },
+    {
+      "id": "FY26_XLSX_File",
+      "module": "Summaries - File",
+      "filenames": [
+        "DocMindAI_Comparison_Test_B_FY2026.xlsx"
+      ],
+      "original_question": "Generate a concise, accurate File Summary of the selected document. Include its overview, key topics, exact facts and figures, main findings, conclusion, and source citations. Do not invent missing details.",
+      "expected_answer_unchanged": "FY2026 revenue $694.8M, 17,840 vehicles, average price $38,950, margin 9.1%, CSAT 4.7/5, EV share 16.2%, 1,325 employees, 8 service centers; South 5,620 and East 3,810 vehicles; cite workbook sheets.",
+      "api_metric_fields": null,
+      "measured": [
+        {
+          "seconds": 0.073,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.053,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.054,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "warmup": [
+        {
+          "seconds": 0.192,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "successful_measured_runs": 3,
+      "all_measured_successful": true,
+      "within_target_all_runs": true,
+      "min_seconds": 0.053,
+      "median_seconds": 0.054,
+      "mean_seconds": 0.06,
+      "p95_nearest_rank_seconds": 0.073,
+      "max_seconds": 0.073
+    },
+    {
+      "id": "FY26_XLSX_Executive",
+      "module": "Summaries - Executive",
+      "filenames": [
+        "DocMindAI_Comparison_Test_B_FY2026.xlsx"
+      ],
+      "original_question": "Generate an Executive Summary containing an overview, objective and scope, key highlights, critical KPIs, findings, supported risks, recommendations if justified, conclusion, and source citations. Preserve all numerical values exactly.",
+      "expected_answer_unchanged": "FY2026 $694.8M, 17,840 vehicles, 9.1% margin, 16.2% EV share, 4.7/5 CSAT, 8 service centers, 1,325 employees, Trailblazer 5,980, Volt-X 2,890, South 5,620 vehicles; cite comparison and regional sheets.",
+      "api_metric_fields": null,
+      "measured": [
+        {
+          "seconds": 0.049,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.05,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.055,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "warmup": [
+        {
+          "seconds": 0.049,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "successful_measured_runs": 3,
+      "all_measured_successful": true,
+      "within_target_all_runs": true,
+      "min_seconds": 0.049,
+      "median_seconds": 0.05,
+      "mean_seconds": 0.051,
+      "p95_nearest_rank_seconds": 0.055,
+      "max_seconds": 0.055
+    },
+    {
+      "id": "C2",
+      "module": "Comparisons",
+      "filenames": [
+        "apex_motors_annual_report.docx",
+        "apex_motors.txt"
+      ],
+      "original_question": "Compare FY2025 annual revenue, annual vehicles sold, Q1 revenue, and Q4 revenue.",
+      "expected_answer_unchanged": "DOCX = TXT: $612.4M FY2025 revenue, 16,070 annual vehicles, Q1 $128.5M revenue, Q4 $181.1M revenue; differences all zero; cite both documents.",
+      "api_metric_fields": [
+        "FY2025 annual revenue",
+        "Annual vehicles sold",
+        "Q1 revenue",
+        "Q4 revenue"
+      ],
+      "measured": [
+        {
+          "seconds": 0.086,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.067,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.083,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "warmup": [
+        {
+          "seconds": 0.598,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "successful_measured_runs": 3,
+      "all_measured_successful": true,
+      "within_target_all_runs": true,
+      "min_seconds": 0.067,
+      "median_seconds": 0.083,
+      "mean_seconds": 0.079,
+      "p95_nearest_rank_seconds": 0.086,
+      "max_seconds": 0.086
+    },
+    {
+      "id": "C3",
+      "module": "Comparisons",
+      "filenames": [
+        "apex_motors_monthly_sales_2025.csv",
+        "apex_motors_data.xlsx"
+      ],
+      "original_question": "Compare January–October total vehicles sold and total revenue.",
+      "expected_answer_unchanged": "CSV = XLSX: January–October total vehicles 12,940 and revenue $488,538,000; differences zero; cite monthly CSV rows and XLSX Sales Data.",
+      "api_metric_fields": [
+        "January–October total vehicles sold",
+        "January–October total revenue"
+      ],
+      "measured": [
+        {
+          "seconds": 0.109,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.069,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.074,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "warmup": [
+        {
+          "seconds": 0.569,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "successful_measured_runs": 3,
+      "all_measured_successful": true,
+      "within_target_all_runs": true,
+      "min_seconds": 0.069,
+      "median_seconds": 0.074,
+      "mean_seconds": 0.084,
+      "p95_nearest_rank_seconds": 0.109,
+      "max_seconds": 0.109
+    },
+    {
+      "id": "C4",
+      "module": "Comparisons",
+      "filenames": [
+        "apex_motors.txt",
+        "apex_motors_data.xlsx"
+      ],
+      "original_question": "Compare Volt-X current stock, units in production, and manufacturing workforce.",
+      "expected_answer_unchanged": "TXT = XLSX: Volt-X current stock 265, in production 310, manufacturing workforce 520; zero difference; cite TXT sections 7–8 and XLSX Inventory & Workforce.",
+      "api_metric_fields": [
+        "Volt-X current stock",
+        "Volt-X units in production",
+        "Manufacturing workforce"
+      ],
+      "measured": [
+        {
+          "seconds": 0.127,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.057,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.062,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "warmup": [
+        {
+          "seconds": 0.59,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "successful_measured_runs": 3,
+      "all_measured_successful": true,
+      "within_target_all_runs": true,
+      "min_seconds": 0.057,
+      "median_seconds": 0.062,
+      "mean_seconds": 0.082,
+      "p95_nearest_rank_seconds": 0.127,
+      "max_seconds": 0.127
+    },
+    {
+      "id": "C6",
+      "module": "Comparisons",
+      "filenames": [
+        "apex_motors_market_report.pdf",
+        "apex_motors.txt"
+      ],
+      "original_question": "Compare Apex Motors' and Horizon Motor Co.'s average transaction prices and CSAT scores across the reports.",
+      "expected_answer_unchanged": "PDF = TXT: Apex $38,100 and 4.6/5 CSAT; Horizon $41,500 and 4.4/5 CSAT; differences zero between documents; cite PDF page 4 and TXT section 10.",
+      "api_metric_fields": [
+        "Apex Motors average transaction price",
+        "Apex Motors CSAT",
+        "Horizon Motor Co. average transaction price",
+        "Horizon Motor Co. CSAT"
+      ],
+      "measured": [
+        {
+          "seconds": 0.068,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.064,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.056,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "warmup": [
+        {
+          "seconds": 0.625,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "successful_measured_runs": 3,
+      "all_measured_successful": true,
+      "within_target_all_runs": true,
+      "min_seconds": 0.056,
+      "median_seconds": 0.064,
+      "mean_seconds": 0.063,
+      "p95_nearest_rank_seconds": 0.068,
+      "max_seconds": 0.068
+    },
+    {
+      "id": "C7",
+      "module": "Comparisons",
+      "filenames": [
+        "apex_motors_market_report.pdf",
+        "apex_motors_annual_report.docx",
+        "apex_motors.txt"
+      ],
+      "original_question": "Do all three documents agree on the FY2025 Trailblazer starting price and sales volume?",
+      "expected_answer_unchanged": "PDF, DOCX and TXT all agree: FY2025 Trailblazer starting price $41,200; 5,640 vehicles sold; differences zero; cite PDF page 3, DOCX page 4, TXT section 6.",
+      "api_metric_fields": [
+        "FY2025 Trailblazer starting price",
+        "FY2025 Trailblazer units sold"
+      ],
+      "measured": [
+        {
+          "seconds": 0.175,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.086,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        },
+        {
+          "seconds": 0.073,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "warmup": [
+        {
+          "seconds": 1.652,
+          "api_ok": true,
+          "answer_present": true,
+          "citations_present": true,
+          "note": "Unchanged answer key still needs manual confirmation"
+        }
+      ],
+      "successful_measured_runs": 3,
+      "all_measured_successful": true,
+      "within_target_all_runs": true,
+      "min_seconds": 0.073,
+      "median_seconds": 0.086,
+      "mean_seconds": 0.111,
+      "p95_nearest_rank_seconds": 0.175,
+      "max_seconds": 0.175
+    }
+  ],
+  "all_10_within_target": true
+}

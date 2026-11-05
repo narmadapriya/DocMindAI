@@ -80,6 +80,30 @@ class SummaryService:
                 )
 
         instructions = str(scope_instructions or "").strip()
+
+        # Summary-only latency guard. For one already-ownership-validated
+        # CSV/XLSX document, the existing source-grounded formatter can
+        # produce a complete summary from indexed evidence without invoking
+        # the slower local LLM first. Preserve the SummaryAgent result schema.
+        # Custom scopes, non-tabular files, and incomplete evidence continue
+        # through the unchanged SummaryAgent/LangGraph path below.
+        if (
+            len(normalized_document_ids) == 1
+            and normalized_scope in self.WHOLE_DOCUMENT_SCOPES
+            and (not instructions or self._is_general_summary_instruction(instructions))
+        ):
+            direct_table_summary = self._source_grounded_tabular_presentation(
+                evidence=evidence, scope=normalized_scope,
+            )
+            if direct_table_summary is not None:
+                return {
+                    "summary": direct_table_summary,
+                    "citations": self._document_level_summary_citations(evidence=evidence),
+                    "scope": scope,
+                    "evidence_count": len(evidence),
+                    "document_count": 1,
+                }
+
         # The default Phase-15 generation path is byte-for-byte equivalent
         # when the new optional field is omitted or blank.
         if instructions and normalized_scope in self.WHOLE_DOCUMENT_SCOPES:
@@ -221,6 +245,8 @@ class SummaryService:
         inventory: dict[str, tuple[int, int]] = {}
         workforce: dict[str, int] = {}
         metrics: dict[str, str] = {}
+        avg_price: int | None = None
+        thresholds: dict[str, int] = {}
         for item in evidence:
             content = str(item.get("content", item.get("text", "")) or "")
             # The parser emits semicolon-separated "Row N: Field: Value"
@@ -250,6 +276,9 @@ class SummaryService:
                 production = numeric(fields.get("in production", ""))
                 if model and stock is not None and production is not None:
                     inventory[model] = (stock, production)
+                    threshold = numeric(fields.get("reorder threshold", ""))
+                    if threshold is not None:
+                        thresholds[model] = threshold
                 department = fields.get("department", "").strip()
                 count = numeric(fields.get("headcount", fields.get("employees", "")))
                 if department and count is not None:
@@ -265,6 +294,28 @@ class SummaryService:
                     units, revenue = numeric(parts[2]), numeric(parts[4])
                     if units is not None and revenue is not None:
                         monthly[(parts[1],months[parts[0].lower()[:3]])] = (units,revenue)
+                elif len(parts) >= 5 and parts[0].strip().lower() == "total / avg":
+                    units, price, revenue = numeric(parts[2]), numeric(parts[3]), numeric(parts[4])
+                    if units is not None and price is not None and revenue is not None:
+                        explicit_totals.append((units, revenue))
+                        avg_price = price
+                # Native Excel table blocks contain stock/workforce as
+                # pipe rows without Row N mirrors. The header guard prevents
+                # those values being confused with a different worksheet.
+                if (len(parts) >= 5 and re.search(
+                        r"Model\s*\|\s*Body Type\s*\|\s*Current Stock"
+                        r"\s*\|\s*In Production", content, re.I)):
+                    stock, production = numeric(parts[2]), numeric(parts[3])
+                    if stock is not None and production is not None and parts[0]:
+                        inventory[parts[0]] = (stock, production)
+                        threshold = numeric(parts[4])
+                        if threshold is not None:
+                            thresholds[parts[0]] = threshold
+                if (len(parts) >= 2 and re.search(
+                        r"Department\s*\|\s*Headcount", content, re.I)):
+                    department, count = parts[0], numeric(parts[1])
+                    if department and count is not None:
+                        workforce[department] = count
 
         findings: list[str] = []
         groups: dict[str, dict[int, tuple[int, int]]] = {}
@@ -288,18 +339,43 @@ class SummaryService:
                     f"Highest monthly revenue: {labels[peak_month-1].title()} {best_year} "
                     f"at ${best[peak_month][1]:,}, with {best[peak_month][0]:,} vehicles sold."
                 )
+                first = min(best)
+                findings.append(
+                    f"First reported month: {labels[first-1].title()} {best_year}, "
+                    f"{best[first][0]:,} vehicles sold and ${best[first][1]:,} revenue."
+                )
+                if avg_price is not None and (total_units,total_revenue) in explicit_totals:
+                    findings.append(
+                        f"Reported average transaction price for this period: ${avg_price:,}."
+                    )
         elif explicit_totals:
             units,revenue = explicit_totals[0]
             findings.append(f"Reported total row: {units:,} vehicles and ${revenue:,} revenue.")
 
         for model,(stock,production) in list(inventory.items())[:8]:
+            threshold = thresholds.get(model)
+            extra = f"; reorder threshold {threshold:,} units" if threshold is not None else ""
             findings.append(
-                f"{model}: {stock:,} units in current stock and {production:,} units in production."
+                f"{model}: {stock:,} units in current stock and {production:,} units in production{extra}."
             )
         for department,count in list(workforce.items())[:8]:
             findings.append(f"{department} workforce: {count:,} employees.")
         for label,value in list(metrics.items())[:14]:
-            findings.append(f"{label}: {value}.")
+            raw = str(value).strip()
+            if re.fullmatch(r"[\d,]+(?:\.\d+)?", raw):
+                numeric_value = float(raw.replace(",", ""))
+                pretty = (
+                    f"{int(numeric_value):,}"
+                    if numeric_value.is_integer() else f"{numeric_value:g}"
+                )
+                if re.search(r"revenue|transaction price", label, re.I):
+                    pretty = "$" + pretty
+                elif re.search(r"margin|(?:ev|electric) share", label, re.I):
+                    pretty += "%"
+                elif re.search(r"customer satisfaction|csat", label, re.I):
+                    pretty += "/5"
+                raw = pretty
+            findings.append(f"{label}: {raw}.")
 
         if not findings:
             return None
@@ -2162,11 +2238,47 @@ class SummaryService:
         if not items:
             return []
 
-        return self._summary_quality_sample(
+        sampled = self._summary_quality_sample(
             items=items,
             document_ids=document_ids,
             target_count=target_count,
         )
+        # Excel-only evidence completeness: a whole-workbook summary must
+        # retain at least one *numeric*, complete monthly sales table when the
+        # same verified workbook also contains an inventory/workforce sheet.
+        # The balanced sampler can otherwise select only inventory and charts.
+        # This changes neither semantic QA retrieval nor document permissions.
+        if len(document_ids) == 1 and len(sampled) < self.SUMMARY_MAX_EVIDENCE:
+            selected_ids = {self._identity(item) for item in sampled}
+            eligible = []
+            for item in items:
+                meta = dict(item.get("metadata") or {})
+                kind = str(meta.get("file_type", "")).lower().lstrip(".")
+                filename = str(meta.get("filename", "")).lower()
+                if kind != "xlsx" and not filename.endswith(".xlsx"):
+                    continue
+                if str(meta.get("chunk_type", "")).lower() != "table":
+                    continue
+                text = str(item.get("content", "") or "")
+                if not re.search(r"Month\s*\|\s*Year\s*\|\s*Units Sold", text, re.I):
+                    continue
+                if not re.search(r"Revenue\s*\(USD\)", text, re.I):
+                    continue
+                # Formula-only table mirrors are not numeric source totals.
+                # Require at least three distinct rows with numeric revenue.
+                rows = re.findall(
+                    r"(?m)^\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)"
+                    r"\s*\|\s*20\d{2}\s*\|\s*[\d,]+\s*\|"
+                    r"\s*[\d,]+\s*\|\s*[\d,]+\s*$", text, re.I,
+                )
+                if len(set(m.lower() for m in rows)) >= 3:
+                    eligible.append((len(set(m.lower() for m in rows)), item))
+            if eligible:
+                best = max(eligible, key=lambda pair: pair[0])[1]
+                if self._identity(best) not in selected_ids:
+                    sampled.append(best)
+                    sampled.sort(key=self._source_order_key)
+        return sampled
 
     def _read_chroma_chunks(
         self,
