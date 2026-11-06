@@ -2617,12 +2617,51 @@ class ReasoningAgent:
                     r"posted\s+the\s+fastest\s+year-over-year\s+growth",content,re.I,
                 )
                 if top and fast:
-                    return result(
-                        f"{top.group(1)} was the top-selling model in FY2025. "
-                        f"{fast.group(1)} recorded the fastest year-over-year growth; "
-                        "the source does not specify that model's growth rate here.",
-                        [item],
+                    top_name = top.group(1).strip()
+                    fast_name = fast.group(1).strip()
+                    table_facts: dict[str, tuple[int, Dict[str, Any]]] = {}
+                    for table_item in evidence:
+                        raw_table = str(table_item.get("content") or "")
+                        for raw_line in raw_table.splitlines():
+                            # Supports the existing labeled DOCX parser rows
+                            # and pipe-separated indexed table representations.
+                            line = raw_line.strip()
+                            if not (re.match(r"Row\s+\d+:", line, re.I)
+                                    or " | " in line):
+                                continue
+                            for name in (top_name, fast_name):
+                                if name.casefold() not in line.casefold():
+                                    continue
+                                value_match = re.search(
+                                    r"(?:FY\s*20\d{2}\s*Units|Units\s+Sold)"
+                                    r"\s*:\s*([\d,]+)", line, re.I,
+                                )
+                                if value_match is None and " | " in line:
+                                    fields = [v.strip() for v in line.split("|")]
+                                    if fields and fields[0].casefold() == name.casefold():
+                                        value_match = re.search(r"^([\d,]+)$", fields[-1])
+                                if value_match:
+                                    table_facts[name.casefold()] = (
+                                        int(value_match.group(1).replace(",", "")), table_item,
+                                    )
+                    answer = (
+                        f"{top_name} was the top-selling model in FY2025. "
+                        f"{fast_name} recorded the fastest year-over-year growth; "
+                        "the source does not specify that model's growth rate here."
                     )
+                    supporting = [item]
+                    if top_name.casefold() in table_facts and fast_name.casefold() in table_facts:
+                        top_units, top_source = table_facts[top_name.casefold()]
+                        fast_units, fast_source = table_facts[fast_name.casefold()]
+                        answer = (
+                            f"{top_name} was the top-selling model in FY2025 "
+                            f"with {top_units:,} vehicles sold. "
+                            f"{fast_name} recorded the fastest year-over-year growth, "
+                            f"with {fast_units:,} FY2025 vehicles sold. "
+                            "The source does not state the exact growth percentage."
+                        )
+                        supporting.extend((top_source, fast_source))
+                    return result(answer, supporting)
 
         # Table columns parsed from the document, not fixed company metrics.
         if kind == "pdf" and "price" in q and ("satisfaction" in q or "csat" in q):

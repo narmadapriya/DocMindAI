@@ -104,6 +104,28 @@ class SummaryService:
                     "document_count": 1,
                 }
 
+        # Single-document business/financial narrative summaries can be
+        # assembled from the already-selected, source-ordered report evidence.
+        # Only activate when several independent topical source sections are
+        # present; unrelated PDFs/DOCX/TXT and custom scopes retain the prior
+        # SummaryAgent path, with no retrieval/API/auth/model changes.
+        if (
+            len(normalized_document_ids) == 1
+            and normalized_scope in self.WHOLE_DOCUMENT_SCOPES
+            and (not instructions or self._is_general_summary_instruction(instructions))
+        ):
+            report_summary = self._grounded_narrative_report_summary(
+                evidence=evidence, scope=normalized_scope,
+            )
+            if report_summary is not None:
+                return {
+                    "summary": report_summary[0],
+                    "citations": report_summary[1],
+                    "scope": scope,
+                    "evidence_count": len(evidence),
+                    "document_count": 1,
+                }
+
         # The default Phase-15 generation path is byte-for-byte equivalent
         # when the new optional field is omitted or blank.
         if instructions and normalized_scope in self.WHOLE_DOCUMENT_SCOPES:
@@ -183,6 +205,378 @@ class SummaryService:
             evidence=focused_evidence,
             scope=normalized_scope,
         )
+
+    @classmethod
+    def _grounded_narrative_report_summary(
+        cls, *, evidence: Sequence[Dict[str, Any]], scope: str,
+    ) -> tuple[str, list[str]] | None:
+        """Fast, source-extractive report summary for *complete* single-file
+        business narratives (PDF/DOCX/TXT). Do not use for custom focus,
+        unrelated documents, or incomplete evidence. No LLM or new retrieval.
+        """
+        if scope not in {"document", "executive"} or not evidence:
+            return None
+        ordered = sorted(list(evidence), key=cls._source_order_key)
+        filenames = cls._summary_filenames(ordered)
+        if len(filenames) != 1:
+            return None
+        filename = filenames[0]
+        if not filename.lower().endswith((".pdf", ".docx", ".txt")):
+            return None
+        raw_joined = " ".join(str(i.get("content") or i.get("text") or "")
+                              for i in ordered)
+        lower_joined = raw_joined.lower()
+        markers = ("revenue", "units sold", "vehicles sold", "transaction price",
+                   "customer satisfaction", "product lineup", "competitive landscape",
+                   "inventory", "regional performance", "fiscal year")
+        if len(ordered) < 3 or sum(x in lower_joined for x in markers) < 4:
+            return None
+
+        groups_terms = {
+            "performance": ("revenue", "unit sales", "units sold", "vehicles sold", "quarter", "fiscal year"),
+            "product": ("product", "model", "suv", "sedan", "coupe", "truck", "ev", "starting price"),
+            "market": ("market", "industry", "competitor", "transaction price", "customer satisfaction", "csat"),
+            "regional": ("regional", "region", "dealer network"),
+            "operations": ("inventory", "workforce", "employee", "manufacturing", "production", "stock", "headcount"),
+            "outlook": ("outlook", "targeting", "target", "planned", "plan to", "expansion", "fy2026", "fy2027", "will continue"),
+        }
+        facts: list[tuple[str, str, str, float]] = []
+        seen: set[str] = set()
+        # Recognize all major kinds of financial report tables generically.
+        table_rows: dict[str, list[tuple[dict[str, str], Dict[str, Any]]]] = {
+            "quarter": [], "region": [], "model": [], "department": [], "manufacturer": [],
+        }
+
+        def cite(item: Dict[str, Any]) -> str:
+            m = dict(item.get("metadata") or {})
+            parts = []
+            page = m.get("page_number") if m.get("page_number") is not None else m.get("page")
+            if page is not None:
+                parts.append(f"Page {page}")
+            section = m.get("section") or m.get("section_name") or m.get("heading")
+            if section:
+                parts.append(f"Section: {section}")
+            sheet = m.get("sheet_name") or m.get("sheet")
+            if sheet:
+                parts.append(f"Sheet: {sheet}")
+            return f"[Source: {filename}" + (", " + ", ".join(parts) if parts else "") + "]"
+
+        def add(value: str, item: Dict[str, Any], *, category: str = "", priority: float = 0) -> None:
+            text = re.sub(r"\s+", " ", str(value or "")).strip(" •;:\t-")
+            # Remove only report/page heading prefixes from extracted prose;
+            # retain every substantive fact and number after the header.
+            text = re.sub(
+                r"^[^|\n]{1,100}\|\s*FY20\d{2}[^|\n]{0,80}?Report\s*",
+                "", text, flags=re.I)
+            text = re.sub(r"\s+-\s+(?=[A-Z])", "; ", text)
+            text = re.sub(r":\s*;\s*", ": ", text)
+            text = re.sub(r"\.\s*;\s*", ". ", text)
+            if not (25 <= len(text) <= 390):
+                return
+            if re.search(r"\b(?:prepared for|prepared from|prepared by|contact:|"
+                         r"copyright|rights reserved|publication date|table of contents|"
+                         r"does not constitute investment advice|index ready|"
+                         r"file summary|executive summary|source documents)\b", text, re.I):
+                return
+            # Ignore source-file lists in consolidated reports, independent
+            # of document names. References remain in the citations field.
+            if re.search(r"\b[\w().-]+\.(?:pdf|docx|xlsx|csv|txt)\b", text, re.I):
+                return
+            if "http" in text.lower() or "www." in text.lower():
+                return
+            if text.count("Starting at $") >= 2:
+                return
+            if text.count("$", 0, len(text)) >= 4 and "CSAT" in text:
+                return
+            if re.search(r"\b(?:figure|page)\s+\d+\b", text, re.I) and len(text.split()) < 12:
+                return
+            if re.fullmatch(r"(?:\d+[.)]\s*)?[\w\s/&-]{1,55}", text):
+                return
+            key = cls._compact(text)
+            if not key or key in seen:
+                return
+            counts = {name: sum(1 for term in words if term in text.lower())
+                      for name, words in groups_terms.items()}
+            kind = category or max(counts, key=counts.get)
+            if not category and not counts[kind]:
+                return
+            # Reject table headers and metadata masquerading as complete facts.
+            if text.lower().startswith(("model body type", "quarter units sold", "region units sold",
+                                        "department headcount", "manufacturer avg", "headquarters:")):
+                return
+            seen.add(key)
+            nums = len(re.findall(r"\$[\d,]+|\b\d[\d,]*(?:\.\d+)?%?", text))
+            score = priority + 2*counts.get(kind, 0) + min(nums, 4)
+            if re.search(r"\b(?:total|highest|largest|top-selling|fastest|outpaced|targeting)\b", text, re.I):
+                score += 2
+            if re.search(r"\b(?:revenue|vehicles sold|units sold)\b", text, re.I) and "$" in text:
+                score += 2
+            facts.append((kind, text.rstrip(".") + ".", cite(item), score))
+
+        for item in ordered:
+            content = str(item.get("content") or item.get("text") or "").replace("\r", "\n")
+            metadata = dict(item.get("metadata") or {})
+            section_name = str(metadata.get("section") or metadata.get("section_name") or "").lower()
+            # Existing DOCX parser emits field-labeled rows (also tolerate
+            # parallel pipe-table chunks); never infer missing field values.
+            for line in content.splitlines():
+                match = re.match(r"\s*Row\s+\d+:\s*(.+)", line, re.I)
+                if not match:
+                    continue
+                fields = {}
+                for field in match.group(1).split(";"):
+                    if ":" in field:
+                        k, v = field.split(":", 1)
+                        fields[k.strip().lower()] = v.strip()
+                for name in table_rows:
+                    if name in fields:
+                        table_rows[name].append((fields, item))
+                        break
+
+            # PDF product catalog rows: four consecutive indexed lines.
+            catalog = re.compile(
+                r"(?m)^([A-Z][A-Za-z0-9 &.+-]{5,75})\s*\n"
+                r"\s*(SUV|Sedan|Pickup Truck|Electric Hatchback|Coupe)\s*\n"
+                r"\s*Starting at\s*(\$[\d,]+)\s*\n"
+                r"\s*FY\s*(20\d{2})\s+units\s+sold\s*:\s*([\d,]+)", re.I,
+            )
+            for r in catalog.finditer(content):
+                table_rows["model"].append(({
+                    "model": r.group(1).strip(), "body type": r.group(2),
+                    "starting price": r.group(3), f"fy{r.group(4)} units": r.group(5),
+                }, item))
+
+            # PDF competitive table: supplier, price, CSAT, and share are
+            # stacked by the parser. Read only rows with all four fields.
+            vendors = re.compile(
+                r"(?m)^([A-Z][A-Za-z0-9 &.+-]{3,70})\s*\n"
+                r"\s*(\$[\d,]+)\s*\n\s*([0-5](?:\.\d+)?)\s*\n"
+                r"\s*(\d+(?:\.\d+)?%)\s*(?=\n|$)", re.I,
+            )
+            for r in vendors.finditer(content):
+                table_rows["manufacturer"].append(({
+                    "manufacturer": r.group(1).strip(), "avg price": r.group(2),
+                    "csat": r.group(3), "ev share": r.group(4),
+                }, item))
+
+            # Multi-space aligned TXT report rows are also structured data.
+            # The heading disambiguates region versus workforce, etc.
+            if filename.lower().endswith(".txt"):
+                for line in content.splitlines():
+                    spaced = re.split(r"\s{2,}", line.strip())
+                    if len(spaced) < 3 or not re.search(r"\d", line):
+                        continue
+                    if ("quarter" in content.lower() or "financial highlights" in section_name) and re.match(
+                        r"^(?:Q[1-4]\s*20\d{2}|FY20\d{2}\s+Total)$", spaced[0], re.I,
+                    ) and len(spaced) >= 3:
+                        table_rows["quarter"].append(({
+                            "quarter": spaced[0], "units sold": spaced[1], "revenue (usd)": spaced[2],
+                        }, item))
+                    elif "regional performance" in content.lower() and re.match(
+                        r"^[A-Za-z][A-Za-z -]{2,25}$", spaced[0], re.I,
+                    ) and re.fullmatch(r"[\d,]+", spaced[1]):
+                        table_rows["region"].append(({
+                            "region": spaced[0], "units sold": spaced[1], "share": spaced[2],
+                        }, item))
+                    elif "product lineup" in content.lower() and len(spaced) >= 4 and spaced[-1].replace(",", "").isdigit() and "$" in spaced[-2]:
+                        table_rows["model"].append(({
+                            "model": spaced[0], "body type": spaced[1],
+                            "starting price": spaced[-2], "fy2025 units": spaced[-1],
+                        }, item))
+                    elif "workforce" in content.lower() and re.fullmatch(r"[\d,]+", spaced[-2]) and "%" in spaced[-1]:
+                        table_rows["department"].append(({
+                            "department": spaced[0], "headcount": spaced[-2],
+                            "share": spaced[-1],
+                        }, item))
+                    elif "competitive landscape" in content.lower() and len(spaced) >= 4 and spaced[1].startswith("$"):
+                        table_rows["manufacturer"].append(({
+                            "manufacturer": spaced[0], "avg price": spaced[1],
+                            "csat": spaced[2], "ev share": spaced[3],
+                        }, item))
+
+            # Only source-reported month-range totals, without conflating an
+            # incomplete year with audited full-year metrics. Generic reporting
+            # period and field labels; neither sample filenames nor figures
+            # are embedded into the production implementation.
+            period_units = re.search(
+                r"(?im)^\s*(?P<period>[A-Za-z]{3,9}\s*[-–]\s*[A-Za-z]{3,9})"
+                r"\s+total\s+(?:units|vehicles)(?:\s+sold)?\s*:\s*"
+                r"(?P<units>[\d,]+)\s*$", content)
+            period_revenue = re.search(
+                r"(?im)^\s*(?P<period>[A-Za-z]{3,9}\s*[-–]\s*[A-Za-z]{3,9})"
+                r"\s+total\s+revenue\s*:\s*\$"
+                r"(?P<revenue>[\d,]+)\s*$", content)
+            if (period_units and period_revenue and
+                re.sub(r"\W", "", period_units.group("period").lower()) ==
+                re.sub(r"\W", "", period_revenue.group("period").lower())):
+                add(f"{period_units.group('period')} reported sales: "
+                    f"{period_units.group('units')} units sold and "
+                    f"${period_revenue.group('revenue')} revenue.", item,
+                    category="performance", priority=15)
+
+            if re.search(r"Current Stock\s+In Production\s+Reorder Threshold", content, re.I):
+                for inventory_row in re.finditer(
+                    r"(?m)^\s*(?P<model>[A-Za-z][A-Za-z0-9 &.\-]{4,66}?)\s{2,}"
+                    r"(?P<stock>[\d,]+)\s+(?P<production>[\d,]+)\s+"
+                    r"(?P<threshold>[\d,]+)\s+(?P<status>[A-Za-z ]+)\s*$",
+                    content):
+                    stock = int(inventory_row.group('stock').replace(',', ''))
+                    threshold = int(inventory_row.group('threshold').replace(',', ''))
+                    closeness = max(0., 18. - (stock / max(threshold, 1)) * 6.)
+                    add(f"{inventory_row.group('model').strip()}: "
+                        f"current stock {inventory_row.group('stock')}; "
+                        f"in production {inventory_row.group('production')}; "
+                        f"reorder threshold {inventory_row.group('threshold')}.",
+                        item, category="operations", priority=closeness)
+
+            # Narrative facts: strip repeated PDF page header/footer lines;
+            # reconstruct wrapped sentences without adding any source facts.
+            clean_lines = []
+            for line in content.splitlines():
+                value = line.strip()
+                if not value:
+                    continue
+                if re.match(r"^(?:Page\s+\d+|FY20\d{2} Market & Product Report|"
+                            r"[A-Za-z ]+\s+FY20\d{2} Market|Figure\s+\d+\.?)$", value, re.I):
+                    continue
+                if re.match(r"^(?:Row\s+\d+:|Columns:|DOCX table)", value, re.I):
+                    continue
+                clean_lines.append(value)
+            paragraph = " ".join(clean_lines)
+            for sentence in re.split(r"(?<=[.!?])\s+(?=[A-Z])", paragraph):
+                add(sentence, item)
+
+        def intnum(value: str) -> int | None:
+            text = str(value or "").strip().replace(",", "")
+            return int(text) if re.fullmatch(r"\d+", text) else None
+
+        quarters = table_rows["quarter"]
+        if quarters:
+            total = [r for r in quarters if "total" in r[0]["quarter"].lower()]
+            regular = [r for r in quarters if "total" not in r[0]["quarter"].lower()]
+            selected = total[:1] + regular[:1] + regular[-1:]
+            for row, source in selected:
+                add(f"{row['quarter']}: {row.get('units sold','')} vehicles sold; "
+                    f"revenue {row.get('revenue (usd)','')}", source,
+                    category="performance", priority=10 if "total" in row["quarter"].lower() else 6)
+
+        products = [(f, it) for f, it in table_rows["model"]
+                    if intnum(next((val for name, val in f.items() if "units" in name), "")) is not None]
+        if products:
+            best = max(products, key=lambda x: intnum(next(
+                v for k, v in x[0].items() if "units" in k)) or -1)
+            for fields, source in [best]:
+                units = next(v for k, v in fields.items() if "units" in k)
+                add(f"{fields['model']} was the highest-selling listed model: "
+                    f"{units} FY units; starting price {fields.get('starting price','not listed')}",
+                    source, category="product", priority=16)
+            # If the report explicitly names its fastest-growing product, add
+            # its supplied table figures too, without guessing a growth rate.
+            fast = re.search(r"([A-Z][A-Za-z0-9 &.-]{5,70})\s+(?:posted|showed)\s+"
+                             r"the fastest year-over-year growth", raw_joined, re.I)
+            if fast:
+                target = next(((f, it) for f, it in products
+                               if f["model"].casefold() == fast.group(1).strip().casefold()), None)
+                if target:
+                    fields, source = target
+                    units = next(v for k, v in fields.items() if "units" in k)
+                    add(f"{fields['model']} showed the fastest year-over-year growth; "
+                        f"FY units sold: {units}; starting price {fields.get('starting price','not listed')}",
+                        source, category="product", priority=13)
+
+        regional = [(f, it) for f, it in table_rows["region"]
+                    if intnum(f.get("units sold", "")) is not None]
+        if len(regional) >= 3:
+            highest = max(regional, key=lambda x: intnum(x[0]["units sold"]) or -1)
+            lowest = min(regional, key=lambda x: intnum(x[0]["units sold"]) or 10**12)
+            for tag, (row, src) in [("largest", highest), ("smallest", lowest)]:
+                reported_share = next((value for key, value in row.items()
+                                       if key.lower().startswith("share")), None)
+                share_phrase = (f" and {reported_share} sales share"
+                                if reported_share else "")
+                add(f"{row['region']} was the {tag} reported region, with "
+                    f"{row['units sold']} vehicles sold{share_phrase}.",
+                    src, category="regional", priority=13)
+
+        workforce = [(f, it) for f, it in table_rows["department"]
+                     if intnum(f.get("headcount", "")) is not None]
+        if workforce:
+            total = [x for x in workforce if "total" in x[0]["department"].lower()]
+            non_total = [x for x in workforce if "total" not in x[0]["department"].lower()]
+            for row, src in (total[:1] + ([max(non_total, key=lambda x: intnum(x[0]["headcount"]) or -1)] if non_total else [])):
+                add(f"Workforce — {row['department']}: {row['headcount']} employees "
+                    f"({row.get('share','share unavailable')}).", src,
+                    category="operations", priority=10)
+
+        vendors = [(f, it) for f, it in table_rows["manufacturer"]
+                   if f.get("avg price", "").startswith("$")]
+        if len(vendors) >= 2:
+            first = vendors[0]
+            alternatives = [x for x in vendors[1:] if x[0]["manufacturer"] != first[0]["manufacturer"]]
+            highest = max(alternatives, key=lambda x: intnum(x[0]["avg price"].replace("$", "")) or -1) if alternatives else None
+            for row, src in [first] + ([highest] if highest else []):
+                add(f"{row['manufacturer']}: average transaction price "
+                    f"{row['avg price']}; CSAT {row.get('csat','not listed')}/5.",
+                    src, category="market", priority=12)
+
+        # Use a small number of distinct source-grounded facts per theme;
+        # never force a Challenges or Outlook section with unrelated metadata.
+        buckets: dict[str, list[tuple[str, str, str, float]]] = {}
+        for fact in facts:
+            buckets.setdefault(fact[0], []).append(fact)
+        if not ({"product", "market"} <= buckets.keys() or
+                {"performance", "product", "outlook"} <= buckets.keys()):
+            return None
+        if len(buckets) < 3 or len(facts) < 8:
+            return None
+
+        quotas = {"performance": 5, "product": 3, "market": 3,
+                  "regional": 2, "operations": 4, "outlook": 3}
+        selected: dict[str, list[tuple[str, str, str, float]]] = {}
+        for cat, limit in quotas.items():
+            ranked = sorted(buckets.get(cat, []), key=lambda x: -x[3])
+            for fact in ranked:
+                selected.setdefault(cat, []).append(fact)
+                if len(selected[cat]) >= limit:
+                    break
+        all_selected = [f for group in selected.values() for f in group]
+        if len(all_selected) < 7:
+            return None
+
+        def block(title: str, items: Sequence[tuple[str, str, str, float]],
+                  *, omit_exact: str = "") -> list[str]:
+            chosen = [item for item in items if item[1] != omit_exact]
+            if not chosen:
+                return []
+            return [title, *["- " + fact[1] for fact in chosen], ""]
+
+        annual = next((f for f in selected.get("performance", [])
+                       if ("revenue" in f[1].lower() and "vehicles" in f[1].lower()
+                           and "fiscal year" in f[1].lower())), None)
+        lead = annual or next((f for f in selected.get("performance", [])
+                               if "revenue" in f[1].lower()), None)
+        lead = lead or next((f for f in selected.get("market", [])
+                             if "industry" in f[1].lower()), None)
+        lead = lead or all_selected[0]
+        if scope == "document":
+            output = [f"File Summary — {filename}", "", "Document Overview", lead[1], ""]
+            output += block("Financial and Sales Information", selected.get("performance", []),
+                            omit_exact=lead[1])
+            output += block("Products and Market Findings",
+                            selected.get("product", []) + selected.get("market", []))
+            output += block("Regional and Operational Findings",
+                            selected.get("regional", []) + selected.get("operations", []))
+            output += block("Outlook and Conclusion", selected.get("outlook", []))
+        else:
+            output = [f"Executive Summary — {filename}", "", "Executive Overview", lead[1], ""]
+            output += block("Key Metrics and KPIs", selected.get("performance", [])
+                            + selected.get("market", []), omit_exact=lead[1])
+            output += block("Main Findings", selected.get("product", [])
+                            + selected.get("regional", []))
+            output += block("Operations and Outlook", selected.get("operations", [])
+                            + selected.get("outlook", []))
+        citations = list(dict.fromkeys(f[2] for f in all_selected))[:12]
+        return "\n".join(output).strip(), citations or [f"[Source: {filename}]"]
 
     @staticmethod
     def _is_general_summary_instruction(instructions: str) -> bool:
@@ -344,6 +738,25 @@ class SummaryService:
                     f"First reported month: {labels[first-1].title()} {best_year}, "
                     f"{best[first][0]:,} vehicles sold and ${best[first][1]:,} revenue."
                 )
+                if kinds == {"csv"} and len(best) >= 2:
+                    end_month = max(best)
+                    start_month = min(best)
+                    change = best[end_month][1] - best[start_month][1]
+                    word = "increase" if change >= 0 else "decrease"
+                    findings.append(
+                        f"Reported revenue {word} between "
+                        f"{labels[start_month-1].title()} and {labels[end_month-1].title()} "
+                        f"{best_year}: ${abs(change):,}."
+                    )
+                    decreases = [(m-1, m) for m in sorted(best)
+                                 if m-1 in best and best[m][1] < best[m-1][1]]
+                    if decreases:
+                        prior, later = decreases[0]
+                        findings.append(
+                            f"Revenue declined from {labels[prior-1].title()} "
+                            f"to {labels[later-1].title()} {best_year}: "
+                            f"${best[prior][1]:,} to ${best[later][1]:,}."
+                        )
                 if avg_price is not None and (total_units,total_revenue) in explicit_totals:
                     findings.append(
                         f"Reported average transaction price for this period: ${avg_price:,}."
@@ -383,15 +796,27 @@ class SummaryService:
         filename, _author, _publication = cls._document_identity(evidence)
         ext = "CSV" if kinds == {"csv"} else "Excel"
         overview = f"{filename} is an indexed {ext} dataset covering the verified metrics listed below."
-        lines = (
-            ["### Executive Summary", "", f"**Executive Overview:** {overview}",
-             "", "#### Critical Metrics & KPIs"]
-            if scope == "executive"
-            else [f"### {filename}", "", f"**Document Overview:** {overview}",
-                  "", "#### Key Information & Verified Figures"]
-        )
+        if kinds == {"csv"}:
+            # CSV exports previously showed Markdown tokens literally in
+            # generated PDFs. Plain headings preserve the same API/string
+            # contract without changing the already-working XLSX formatting.
+            lines = (
+                ["Executive Summary", "", "Executive Overview", overview,
+                 "", "Critical Metrics & KPIs"]
+                if scope == "executive"
+                else [f"File Summary — {filename}", "", "Document Overview",
+                      overview, "", "Key Information & Verified Figures"]
+            )
+        else:
+            lines = (
+                ["### Executive Summary", "", f"**Executive Overview:** {overview}",
+                 "", "#### Critical Metrics & KPIs"]
+                if scope == "executive"
+                else [f"### {filename}", "", f"**Document Overview:** {overview}",
+                      "", "#### Key Information & Verified Figures"]
+            )
         lines.extend(f"- {item}" for item in findings)
-        lines.extend(["", "#### Conclusion",
+        lines.extend(["", "Conclusion" if kinds == {"csv"} else "#### Conclusion",
                       "The figures above are taken from the selected document's indexed records; "
                       "no unsupported forecast or missing-period values have been inferred."])
         return "\n".join(lines)
