@@ -1,0 +1,14 @@
+{
+  "production_modified_files": [
+    {
+      "path": "backend/app/services/summary_service.py",
+      "expected_source_sha256": "ecd5b89ecff7ec8952a5a6cadde47460dd8f6306ed786d43d430ac52b162687e",
+      "candidate_sha256": "d9b865d3686e41ca7d0dd44983b4921e3cb58c3b0e59c7c21f82d2dcc28fc233",
+      "changed_methods": [
+        "_grounded_narrative_report_summary"
+      ]
+    }
+  ],
+  "from": "November 6 10-test candidate (reported installed), NOT byte-verified frozen baseline",
+  "live_latency": "From user terminal, not executed here"
+}

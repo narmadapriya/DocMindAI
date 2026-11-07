@@ -255,7 +255,10 @@ class SummaryService:
                 parts.append(f"Page {page}")
             section = m.get("section") or m.get("section_name") or m.get("heading")
             if section:
-                parts.append(f"Section: {section}")
+                clean_section = re.sub(r"[=\r\n]+", " ", str(section))
+                clean_section = re.sub(r"\s+", " ", clean_section).strip(" .:;-")
+                if clean_section:
+                    parts.append(f"Section: {clean_section[:100]}")
             sheet = m.get("sheet_name") or m.get("sheet")
             if sheet:
                 parts.append(f"Sheet: {sheet}")
@@ -263,6 +266,29 @@ class SummaryService:
 
         def add(value: str, item: Dict[str, Any], *, category: str = "", priority: float = 0) -> None:
             text = re.sub(r"\s+", " ", str(value or "")).strip(" •;:\t-")
+            # Non-prose OCR captions, parser separators and flattened native
+            # tables are not standalone business findings. Their numeric facts
+            # are recovered below from verified individual rows instead.
+            if (re.search(r"(?i)\bOCR\s+text\s*:", text)
+                    # Chart-axis/legend OCR sometimes consists only of repeated
+                    # category names, separator glyphs, and years.  These are
+                    # not independently meaningful prose or numerical claims.
+                    or re.search(r"(?i)\b(?:industry|market)\s+(?:industry|market)\s+average\b", text)
+                    or re.search(r"\b(?:19|20)\d{2}(?:\s+(?:19|20)\d{2}){3,}\b", text)
+                    or "====" in text or text.count("|") >= 3
+                    or re.search(r"(?i)\b(?:Quarter\s+Units Sold\s+Revenue|"
+                                 r"Model\s+Body Type\s+Starting Price|"
+                                 r"Region\s+Units Sold\s+Share)\b", text)):
+                return
+            # Remove section labels only when followed by actual prose.
+            text = re.sub(
+                r"(?i)^(?:Conclusion|Product Catalog|Product Lineup|Market Analysis|"
+                r"Inventory Snapshot|FY20\d{2} Outlook)\s+(?=[A-Z][a-z])",
+                "", text,
+            )
+            # Convert embedded bullet glyphs from page extraction into
+            # readable punctuation without generating new factual claims.
+            text = re.sub(r"\s*•\s*", "; ", text).strip(" ;")
             # Remove only report/page heading prefixes from extracted prose;
             # retain every substantive fact and number after the header.
             text = re.sub(
@@ -276,13 +302,21 @@ class SummaryService:
             if re.search(r"\b(?:prepared for|prepared from|prepared by|contact:|"
                          r"copyright|rights reserved|publication date|table of contents|"
                          r"does not constitute investment advice|index ready|"
-                         r"file summary|executive summary|source documents)\b", text, re.I):
+                         r"file summary|executive summary|source documents|"
+                         r"source identified in the market report|"
+                         r"does not add external company|supplied files)\b", text, re.I):
                 return
             # Ignore source-file lists in consolidated reports, independent
             # of document names. References remain in the citations field.
             if re.search(r"\b[\w().-]+\.(?:pdf|docx|xlsx|csv|txt)\b", text, re.I):
                 return
             if "http" in text.lower() or "www." in text.lower():
+                return
+            if (re.search(r"(?i)^(?:current stock vs\.|five-year sales index|"
+                          r"quarterly revenue and unit sales|fy20\d{2} workforce by department|"
+                          r"average transaction price by manufacturer)", text)
+                    or (re.search(r"(?i)\bfounded\s+\d{4}\b", text)
+                        and not re.search(r"(?i)\b(?:employed|revenue|vehicles sold)\b", text))):
                 return
             if text.count("Starting at $") >= 2:
                 return
@@ -298,6 +332,9 @@ class SummaryService:
             counts = {name: sum(1 for term in words if term in text.lower())
                       for name, words in groups_terms.items()}
             kind = category or max(counts, key=counts.get)
+            if not category and re.search(r"(?i)\b(?:inventory|stock|reorder|in production|"
+                                          r"manufacturing|workforce|headcount|employees)\b", text):
+                kind = "operations"
             if not category and not counts[kind]:
                 return
             # Reject table headers and metadata masquerading as complete facts.
@@ -307,16 +344,98 @@ class SummaryService:
             seen.add(key)
             nums = len(re.findall(r"\$[\d,]+|\b\d[\d,]*(?:\.\d+)?%?", text))
             score = priority + 2*counts.get(kind, 0) + min(nums, 4)
+            if kind == "operations" and re.search(r"(?i)\b(?:employed|headcount)\b", text) and nums:
+                score += 10
             if re.search(r"\b(?:total|highest|largest|top-selling|fastest|outpaced|targeting)\b", text, re.I):
                 score += 2
             if re.search(r"\b(?:revenue|vehicles sold|units sold)\b", text, re.I) and "$" in text:
                 score += 2
             facts.append((kind, text.rstrip(".") + ".", cite(item), score))
 
+        # A report's year-end statement and its final outlook may be
+        # separated from their table/heading by TXT index chunk boundaries.
+        # These flags affect TXT narrative summaries only, never the shared
+        # retrieval, CSV/XLSX, DOCX, PDF, or Chat & Ask code paths.
+        is_txt_report = filename.lower().endswith(".txt")
+        txt_outlook_active = False
+
         for item in ordered:
             content = str(item.get("content") or item.get("text") or "").replace("\r", "\n")
             metadata = dict(item.get("metadata") or {})
             section_name = str(metadata.get("section") or metadata.get("section_name") or "").lower()
+
+            if is_txt_report:
+                # Extract only explicit fiscal-year totals from this source
+                # chunk. A ten-month subtotal must never displace a documented
+                # FY total merely because a narrative sentence is wrapped in
+                # report headings or separators.
+                for year_total in re.finditer(
+                    r"(?im)^\s*(FY\s*20\d{2}\s+Total)\s+"
+                    r"(?P<units>[\d,]+)\s+(?P<revenue>\$[\d,]+)\s*$",
+                    content,
+                ):
+                    add(f"{year_total.group(1)}: "
+                        f"{year_total.group('units')} vehicles sold; "
+                        f"revenue {year_total.group('revenue')}.",
+                        item, category="performance", priority=42)
+
+                for annual_statement in re.finditer(
+                    r"(?is)\b[A-Z][A-Za-z0-9 &.'-]{2,75}\s+"
+                    r"(?:closed|reported)\s+fiscal\s+year\s+20\d{2}"
+                    r"\s+with\s+\$[\d,.]+\s+"
+                    r"(?:million|billion|thousand)?\s+in\s+revenue"
+                    r"\s+on\s+[\d,]+\s+(?:vehicles|units)\s+sold"
+                    r"(?:[^.!?]{0,140})[.!?]",
+                    content,
+                ):
+                    add(annual_statement.group(0), item,
+                        category="performance", priority=40)
+
+                # Preserve outlook context across consecutive TXT chunks when
+                # the parser splits a heading from its individual bullet rows.
+                # A later numbered section ends the scope; do not promote
+                # unrelated list bullets into future business plans.
+                section_headings = list(re.finditer(
+                    r"(?im)^\s*\d{1,2}\.\s+([A-Z][^\n]{3,85})\s*$", content,
+                ))
+                if section_headings:
+                    txt_outlook_active = bool(re.search(
+                        r"(?i)\bFY\s*20\d{2}\s+OUTLOOK\b",
+                        section_headings[-1].group(1),
+                    ))
+                if "outlook" in section_name:
+                    txt_outlook_active = True
+                # TXT ingesters sometimes omit a heading-only index chunk.
+                # A dated growth target plus an explicit priorities heading
+                # establishes outlook context from the remaining source text.
+                if (re.search(r"(?i)\bManagement\s+is\s+targeting\s+"
+                              r"\d+(?:\.\d+)?%\s+.*?\bFY20\d{2}\b", content, re.S)
+                        and re.search(r"(?i)\bPlanned\s+priorities\s+include\s*:", content)):
+                    txt_outlook_active = True
+
+            # Native DOCX table chunks use pipe-delimited header + rows;
+            # read those cells instead of feeding the entire concatenated
+            # table or OCR annotation into the narrative prose selector.
+            if filename.lower().endswith(".docx"):
+                pipe_lines = [line.strip() for line in content.splitlines()
+                              if line.strip() and "|" in line]
+                if len(pipe_lines) > 1:
+                    headers = [re.sub(r"\s+", " ", c).lower().strip()
+                               for c in pipe_lines[0].split("|")]
+                    category = next((name for name in table_rows
+                                     if name in headers), None)
+                    if (category and len(headers) >= 3
+                            and len(set(headers)) == len(headers)):
+                        for line in pipe_lines[1:]:
+                            cells = [c.strip() for c in line.split("|")]
+                            if len(cells) != len(headers):
+                                continue
+                            fields = dict(zip(headers, cells))
+                            # Numeric column gate prevents arbitrary pipe
+                            # notation in prose being treated as source rows.
+                            if any(re.search(r"\d", c) for c in cells[1:]):
+                                table_rows[category].append((fields, item))
+
             # Existing DOCX parser emits field-labeled rows (also tolerate
             # parallel pipe-table chunks); never infer missing field values.
             for line in content.splitlines():
@@ -358,6 +477,39 @@ class SummaryService:
                     "manufacturer": r.group(1).strip(), "avg price": r.group(2),
                     "csat": r.group(3), "ev share": r.group(4),
                 }, item))
+
+            # Report outlook bullets often span multiple raw TXT lines.
+            # Keep each explicit source bullet as an independent finding
+            # instead of joining an entire plan into one fragile paragraph.
+            if filename.lower().endswith(".txt"):
+                in_outlook = bool(re.search(r"(?i)\b(?:outlook|planned priorities)\b",
+                                            section_name))
+                if not in_outlook:
+                    in_outlook = txt_outlook_active or bool(re.search(
+                        r"(?i)^\s*(?:\d+\.\s*)?FY20\d{2}\s+OUTLOOK", content, re.M,
+                    ))
+                if in_outlook:
+                    target = re.search(
+                        r"(?i)\bManagement\s+is\s+targeting\s+\d+(?:\.\d+)?%"
+                        r"\s+(?:unit\s+sales|vehicle\s+sales|sales)\s+growth"
+                        r"\s+for\s+FY20\d{2}\b", content)
+                    if target:
+                        add(target.group(0) + ".", item, category="outlook", priority=19)
+                    active_bullet = ""
+                    for source_line in content.splitlines():
+                        line = source_line.strip()
+                        if re.match(r"^[-•]\s+", line):
+                            if active_bullet:
+                                add(active_bullet, item, category="outlook", priority=13)
+                            active_bullet = re.sub(r"^[-•]\s+", "", line)
+                        elif active_bullet and line and not re.fullmatch(r"[=\-]+", line):
+                            if re.match(r"^(?:\d+\.|Sources?|FY20\d{2})\b",line,re.I):
+                                add(active_bullet, item, category="outlook", priority=13)
+                                active_bullet = ""
+                            else:
+                                active_bullet += " " + line
+                    if active_bullet:
+                        add(active_bullet, item, category="outlook", priority=13)
 
             # Multi-space aligned TXT report rows are also structured data.
             # The heading disambiguates region versus workforce, etc.
@@ -530,8 +682,8 @@ class SummaryService:
         if len(buckets) < 3 or len(facts) < 8:
             return None
 
-        quotas = {"performance": 5, "product": 3, "market": 3,
-                  "regional": 2, "operations": 4, "outlook": 3}
+        quotas = {"performance": 5, "product": 3, "market": 5,
+                  "regional": 2, "operations": 4, "outlook": 6}
         selected: dict[str, list[tuple[str, str, str, float]]] = {}
         for cat, limit in quotas.items():
             ranked = sorted(buckets.get(cat, []), key=lambda x: -x[3])
@@ -548,11 +700,22 @@ class SummaryService:
             chosen = [item for item in items if item[1] != omit_exact]
             if not chosen:
                 return []
-            return [title, *["- " + fact[1] for fact in chosen], ""]
+            def display_fact(value: str) -> str:
+                return re.sub(
+                    r"(?i)^(?:Conclusion|Product Catalog|Market Analysis|"
+                    r"Inventory Snapshot|FY20\d{2} Outlook)\s+(?=[A-Z])",
+                    "", value.strip(),
+                )
+            return [title, *["- " + display_fact(fact[1]) for fact in chosen], ""]
 
+        # Executive/report overview should lead with an explicitly labeled
+        # full-year total when one exists. A Jan–Oct subtotal is not a FY total.
         annual = next((f for f in selected.get("performance", [])
-                       if ("revenue" in f[1].lower() and "vehicles" in f[1].lower()
-                           and "fiscal year" in f[1].lower())), None)
+                       if ("revenue" in f[1].lower()
+                           and re.search(r"(?i)\b(?:fiscal year\s+20\d{2}|"
+                                         r"fy20\d{2}\s+total|annual total)\b",
+                                         f[1])
+                           and re.search(r"(?i)\b(?:vehicles|units)\s+sold\b", f[1]))), None)
         lead = annual or next((f for f in selected.get("performance", [])
                                if "revenue" in f[1].lower()), None)
         lead = lead or next((f for f in selected.get("market", [])

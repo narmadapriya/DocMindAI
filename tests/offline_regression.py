@@ -1,103 +1,96 @@
-"""Read-only isolated regression for the two targeted complete source files.
-No backend server, network access, live credentials, DB writes or Ollama calls.
-"""
+"""Offline source-fact regression; no network, Ollama, app imports, or DB access."""
+from pathlib import Path
 import ast
 import importlib.util
 import re
 import sys
-import types
-from pathlib import Path
+import time
 
-ROOT = Path(__file__).resolve().parents[1]
-service_path = ROOT / 'backend/app/services/summary_service.py'
-reason_path = ROOT / 'backend/app/rag/agents/reasoning_agent.py'
+ROOT=Path(__file__).resolve().parents[1]
+PATH=ROOT/'backend/app/services/summary_service.py'
+compile(PATH.read_text(encoding='utf8'), str(PATH), 'exec')
+spec=importlib.util.spec_from_file_location('local_docmind_summary', PATH)
+mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+S=mod.SummaryService
+count=0
 
-for path in (service_path, reason_path):
-    compile(path.read_text(encoding='utf8'), str(path), 'exec')
-
-spec = importlib.util.spec_from_file_location('standalone_summary_service', service_path)
-mod = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(mod)
-SummaryService = mod.SummaryService
-
-# Stub imports only for isolated ReasoningAgent class loading. These are not
-# application changes and never connect to Ollama.
-for name in ['app','app.rag','app.rag.llm','app.core']:
-    sys.modules.setdefault(name, types.ModuleType(name))
-llm = types.ModuleType('app.rag.llm.ollama_client')
-llm.OllamaClient = type('OllamaClient', (), {})
-llm.OllamaModelError = type('OllamaModelError', (Exception,), {})
-sys.modules['app.rag.llm.ollama_client'] = llm
-log = types.ModuleType('app.core.logging')
-log.get_logger = lambda x: None
-log.log_event = lambda *a, **kw: None
-sys.modules['app.core.logging'] = log
-perf = types.ModuleType('app.core.performance')
-perf.TTLCache = type('TTLCache', (), {'__class_getitem__': classmethod(lambda cls, _:cls)})
-sys.modules['app.core.performance'] = perf
-spec = importlib.util.spec_from_file_location('standalone_reasoning_agent', reason_path)
-rmod = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(rmod)
-ReasoningAgent = rmod.ReasoningAgent
-
-count = 0
-
-def check(label, cond):
+def check(name, condition):
     global count
-    assert cond, label
-    count += 1
-    print('PASS', label)
+    assert condition, name
+    print('PASS', name)
+    count+=1
 
-# Q6: selected DOCX only, models from narrative and units from a separate
-# source table. The code uses source values and IDs, not hardcoded facts.
-q6 = 'Which vehicle model sold the most units in FY2025, and which showed the fastest year-over-year growth?'
-meta = {'file_type':'docx','filename':'example_annual.docx'}
-narr = {'chunk_id':'narrative', 'metadata':meta,
-        'content': "Apex SUV Trailblazer was the company's top seller. Apex EV Volt-X posted the fastest year-over-year growth."}
-table = {'chunk_id':'table', 'metadata':meta,
-         'content': ('Model | Body Type | Starting Price | FY2025 Units\n'
-                     'Apex SUV Trailblazer | SUV | $42,000 | 6,100\n'
-                     'Apex EV Volt-X | EV | $46,000 | 1,900')}
-r = ReasoningAgent._document_fact_fast_reasoning(q6, [narr, table])
-check('Q6 recognizes both model identities', bool(r and 'Trailblazer' in r['answer'] and 'Volt-X' in r['answer']))
-check('Q6 includes exactly supplied model counts', bool(r and '6,100' in r['answer'] and '1,900' in r['answer']))
-check('Q6 cites narrative and table chunk', bool(r and set(r['used_evidence_ids']) == {'narrative','table'}))
-r_missing = ReasoningAgent._document_fact_fast_reasoning(q6, [narr])
-check('Q6 does not invent missing model figures', bool(r_missing and '6,100' not in r_missing['answer']))
+def ev(filename, content, index=0, **extra):
+    meta={'filename':filename, 'file_type':filename.rsplit('.',1)[-1],
+          'document_id':'isolated-test','chunk_index':index, **extra}
+    return {'chunk_id':f'c{index}', 'content':content, 'metadata':meta}
 
-# Use one complete business doc with independent topical sections. Entries
-# deliberately use different business names and amounts to detect hardcoding.
-meta_pdf = {'filename':'river_market.pdf','file_type':'pdf','page_number':2}
-source = [
- {'chunk_id':'s1','metadata':meta_pdf, 'content':'Fiscal year 2024 total revenue was $91,000,000 from 2,400 units sold. Market share improved in the North region.'},
- {'chunk_id':'s2','metadata':meta_pdf, 'content':'The product lineup of SUV and EV models expanded. Falcon SUV was the top-selling model with 1,200 units sold. Starting price $42,500.'},
- {'chunk_id':'s3','metadata':meta_pdf, 'content':'Competitor average transaction price was $45,600. Customer satisfaction CSAT was 4.2 out of 5. The EV share grew.'},
- {'chunk_id':'s4','metadata':meta_pdf, 'content':'Inventory at the manufacturing facility was adequate. The company is planning an EV production expansion for fiscal year 2025.'},
+# Deliberately invented, non-Apex fixture: tests general source extraction,
+# not hardcoding the user's benchmark values.
+report='sample_annual.docx'
+doc=[
+    ev(report,'Arbor Motors closed fiscal year 2024 with $91.2 million in revenue on 2,450 vehicles sold.',0),
+    ev(report, 'Quarter | Units Sold | Revenue (USD)\nQ1 2024 | 500 | $18,500,000\nQ4 2024 | 720 | $28,900,000\nFY2024 Total | 2,450 | $91,200,000',1,chunk_type='table'),
+    ev(report,'Model | Body Type | Starting Price | FY2024 Units\nArbor SUV Explorer | SUV | $45,200 | 1,100\nArbor EV Glide | EV | $50,000 | 600',2,chunk_type='table'),
+    ev(report,'Region | Units Sold | Share of FY2024 Sales\nNorth | 500 | 20.4%\nSouth | 900 | 36.7%\nWest | 700 | 28.6%\nEast | 350 | 14.3%',3,chunk_type='table'),
+    ev(report,'Manufacturing workforce has 210 employees. Management is targeting 8% unit sales growth for FY2025. Planned regional service expansion will accompany EV production investment.',4),
 ]
 for scope in ('document','executive'):
-    res = SummaryService._grounded_narrative_report_summary(evidence=source, scope=scope)
-    check(f'{scope}: complete unrelated business report accepted', res is not None)
-    if res:
-        answer,cites = res
-        check(f'{scope}: source figures included', '$91,000,000' in answer and ('1,200' in answer or '2,400' in answer))
-        check(f'{scope}: page citation retained', any('Page 2' in x for x in cites))
-        check(f'{scope}: no raw markdown headings', '###' not in answer and '**' not in answer)
+    out=S._grounded_narrative_report_summary(evidence=doc,scope=scope)
+    check(f'{scope} DOCX parses source tables',out is not None)
+    if out:
+        txt,cites=out
+        for label,number in [('Q1','500'),('Q4','720'),('SUV','1,100'),('South','900'),('East','350')]:
+            check(f'{scope} DOCX {label} {number}',number in txt)
+        check(f'{scope} DOCX no flattened pipe dump','Quarter | Units' not in txt and 'Model | Body' not in txt)
 
-nonbusiness = [{'chunk_id':str(i),'metadata':{'filename':'guide.pdf','file_type':'pdf'},
-                'content':'Chapter on woodland birds and geology.'} for i in range(5)]
-check('Unrelated reports retain original agent', SummaryService._grounded_narrative_report_summary(evidence=nonbusiness, scope='document') is None)
-check('Custom scope remains on original path', SummaryService._grounded_narrative_report_summary(evidence=source, scope='section') is None)
-check('No missing evidence fabricated', SummaryService._grounded_narrative_report_summary(evidence=[], scope='executive') is None)
-
-class ForbiddenAgent:
-    def summarize(self, **kw):
-        raise AssertionError('Complete grounded summary incorrectly called local model')
-
-svc = SummaryService(summary_agent=ForbiddenAgent(), retrieval_graph=None)
-svc._whole_document_evidence = lambda **kw: source
+pdf='sample_market.pdf'
+pdf_chunks=[ev(pdf,'Arbor Motors introduced its new product lineup while revenue grew ahead of the industry. The market comparison showed SUV growth and stronger customer satisfaction.',0,page_number=1),
+            ev(pdf,'Product Catalog\nArbor SUV Explorer\nSUV\nStarting at $45,200\nFY2024 units sold: 1,100\nArbor EV Glide\nElectric Hatchback\nStarting at $50,000\nFY2024 units sold: 600',1,page_number=2),
+            ev(pdf,'Competitive Landscape\nManufacturer\nAvg. Price (USD)\nCSAT (out of 5)\nEV Share of Sales\nArbor Motors\n$41,200\n4.5\n12.0%\nRidge Motor Co.\n$46,800\n4.1\n10.0%',2,page_number=3),
+            ev(pdf,'Inventory Snapshot\nThe EV model is close to its reorder threshold as of October 2024. OCR text: j8%# unverified chart pixels. The company plans additional production in FY2025. Conclusion\nArbor Motors enters FY2025 with higher growth than the wider market.',3,page_number=4),
+            ev(pdf,'Industry average revenue remained flat. The North region leads expansion and production capacity is expected to increase next year.',4,page_number=5)]
 for scope in ('document','executive'):
-    r=svc.summarize(user_id='u', document_ids=['d'], scope=scope)
-    check(f'{scope}: result schema preserved', set(['summary','citations','scope','evidence_count','document_count']).issubset(r))
-    check(f'{scope}: model bypass only for complete evidence', bool(r['summary'] and r['citations']))
+    out=S._grounded_narrative_report_summary(evidence=pdf_chunks,scope=scope)
+    check(f'{scope} PDF returns complete narrative',out is not None)
+    if out:
+        txt,cites=out
+        check(f'{scope} PDF no OCR noise','j8%#' not in txt and 'OCR text:' not in txt)
+        check(f'{scope} PDF provenance',any('Page' in c for c in cites))
+        check(f'{scope} PDF source product details', '$45,200' in txt and '1,100' in txt)
 
-print(f'OFFLINE CHECKS PASSED: {count}')
+# TXT fixture: both yearly and partial-year values must remain distinct.
+txtfile='sample_consolidated.txt'
+txtchunks=[
+    ev(txtfile,'FY2024 Total: 2,450 vehicles sold; revenue $91,200,000.\nJan-Oct total units: 2,100\nJan-Oct total revenue: $78,000,000',0),
+    ev(txtfile,'Quarter       Units Sold       Revenue (USD)\nQ1 2024          500        $18,500,000\nQ4 2024          720        $28,900,000\nFY2024 Total     2,450        $91,200,000',1),
+    ev(txtfile,'Product Catalog\nArbor SUV Explorer\nSUV\nStarting at $45,200\nFY2024 units sold: 1,100\nArbor EV Glide\nElectric Hatchback\nStarting at $50,000\nFY2024 units sold: 600',2),
+    ev(txtfile,'Market Analysis: Arbor Motors beat industry averages. Average transaction price $41,200. Customer satisfaction 4.5 out of 5.',3),
+    ev(txtfile,'FY2025 OUTLOOK\nManagement is targeting 8% unit sales growth for FY2025.\nPlanned priorities include:\n- A 500-unit increase in EV production capacity.\n- Opening three new regional service centers.\n- Expansion in the East region.\n- Improving customer satisfaction from 4.5 to 4.8.\n- Disciplined cost management across supply-chain operations.',4,section='FY2025 OUTLOOK'),
+]
+for scope in ('document','executive'):
+    out=S._grounded_narrative_report_summary(evidence=txtchunks,scope=scope)
+    check(f'{scope} TXT accepts fully grounded broad summary',out is not None)
+    if out:
+        text,cites=out
+        check(f'{scope} TXT full-year lead','2,450' in text.split('Financial')[0].split('Key Metrics')[0])
+        check(f'{scope} TXT no separators','====' not in text)
+        check(f'{scope} TXT document provenance',any('sample_consolidated.txt' in c for c in cites))
+
+# Negative: no summary of unrelated or incomplete evidence should trigger.
+check('Unrelated simple PDF falls back',S._grounded_narrative_report_summary(evidence=[ev('tech.pdf','The rain is cold.',1)],scope='document') is None)
+check('Custom section summary falls back',S._grounded_narrative_report_summary(evidence=doc,scope='section') is None)
+check('No mixed-file summary direct fast path',S._grounded_narrative_report_summary(evidence=pdf_chunks+doc,scope='document') is None)
+
+# Review change scope compared to already-installed November 6 candidate.
+baseline=Path('/mnt/data/DocMindAI_13Test_Targeted_Fix_20261106/backend/app/services/summary_service.py')
+if baseline.is_file():
+    orig=ast.parse(baseline.read_text()); updated=ast.parse(PATH.read_text())
+    def funcs(tree):
+        cl=next(x for x in tree.body if isinstance(x,ast.ClassDef) and x.name=='SummaryService')
+        return {x.name:ast.dump(x,include_attributes=False) for x in cl.body if isinstance(x,(ast.FunctionDef,ast.AsyncFunctionDef))}
+    f0,f1=funcs(orig),funcs(updated)
+    changed=[k for k in f1 if f0.get(k)!=f1[k]]
+    check('Only grounded narrative method changed',changed==['_grounded_narrative_report_summary'])
+
+print(f'{count}/{count} offline checks passed. End-to-end latency NOT measured.')

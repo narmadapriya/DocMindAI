@@ -1,0 +1,5 @@
+Source: November 7 candidate summary_service.py (NOT byte-verified November 1 logical freeze)
+Only production file: backend/app/services/summary_service.py
+Only changed method: _grounded_narrative_report_summary
+EXPECTED_SOURCE_SHA256: d9b865d3686e41ca7d0dd44983b4921e3cb58c3b0e59c7c21f82d2dcc28fc233
+CORRECTED_SHA256: 03124f7a86cf0000f0aebe31326b5eb0d4f62a15918505a72ac2cdbabc8ac97f

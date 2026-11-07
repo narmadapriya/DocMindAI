@@ -1,0 +1,8 @@
+test_id,module,document,successful_measured_runs,median_seconds,p95_nearest_rank_seconds,max_seconds,all_citations_present,all_under_10s_target,all_basic_checks_passed
+Q9,Chat & Ask,apex_motors.txt,3/3,0.141,0.412,0.412,True,True,True
+PDF_File_Summary,Summaries - File,apex_motors_market_report.pdf,3/3,0.067,0.165,0.165,True,True,True
+PDF_Executive_Summary,Summaries - Executive,apex_motors_market_report.pdf,3/3,0.059,0.499,0.499,True,True,True
+DOCX_File_Summary,Summaries - File,apex_motors_annual_report.docx,3/3,0.048,0.05,0.05,True,True,True
+DOCX_Executive_Summary,Summaries - Executive,apex_motors_annual_report.docx,3/3,0.048,0.05,0.05,True,True,True
+TXT_File_Summary,Summaries - File,apex_motors.txt,3/3,0.044,0.047,0.047,True,True,True
+TXT_Executive_Summary,Summaries - Executive,apex_motors.txt,3/3,0.042,0.058,0.058,True,True,True
